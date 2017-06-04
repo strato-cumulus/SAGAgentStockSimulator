@@ -1,8 +1,6 @@
 package strategy;
 
 import jade.core.AID;
-import model.Share;
-import model.Stock;
 import model.order.BuyOrder;
 import model.request.PortfolioRequest;
 
@@ -18,5 +16,5 @@ public abstract class Strategy {
         return null;
     }
 
-    public abstract Map<AID, BuyOrder> perform(int funds, Map<AID, PortfolioRequest> playerPortfolios);
+    public abstract Map<AID, List<BuyOrder>> perform(int funds, Map<AID, PortfolioRequest> playerPortfolios);
 }

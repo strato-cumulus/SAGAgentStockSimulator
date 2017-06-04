@@ -5,15 +5,36 @@ import model.Stock;
 import model.account.Account;
 
 import java.util.Collection;
+import java.util.Comparator;
 
 public class SellOrder extends Order {
 
-    public SellOrder(Account account, Stock stock, long unitPrice, Collection<Share> shares) {
-        super(account, stock, unitPrice, shares);
+    public final long unitPrice;
+
+    public SellOrder(Stock stock, long unitPrice, Collection<Share> shares) {
+        super(stock, shares);
+        this.unitPrice = unitPrice;
     }
 
-    @Override
-    public boolean isComplete() {
-        return this.shares.size() == 0;
+    public static class ByPriceAscending implements Comparator<SellOrder> {
+
+        @Override
+        public int compare(SellOrder o1, SellOrder o2) {
+            if(o1.unitPrice == o2.unitPrice) {
+                return 0;
+            }
+            return o1.unitPrice < o2.unitPrice ? 1: -1;
+        }
+    }
+
+    public static class ByPriceDescending implements Comparator<SellOrder> {
+
+        @Override
+        public int compare(SellOrder o1, SellOrder o2) {
+            if(o1.unitPrice == o2.unitPrice) {
+                return 0;
+            }
+            return o1.unitPrice > o2.unitPrice ? 1: -1;
+        }
     }
 }

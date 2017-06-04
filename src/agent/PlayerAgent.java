@@ -5,10 +5,9 @@ import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.lang.acl.ACLMessage;
-import model.order.BuyOrder;
-import model.order.SellOrder;
+import model.Ontology;
 import model.request.PortfolioRequest;
-import model.request.TakeSharesRequest;
+import model.request.ShowFundsRequest;
 import strategy.Strategy;
 
 import java.util.Arrays;
@@ -29,58 +28,30 @@ public class PlayerAgent extends Agent {
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {
-                sendPortfolioRequest(brokerAID);
-                PortfolioRequest portfolioRequest = receivePortfolioRequestResponse();
-                if(portfolioRequest == null) {
-                    block();
-                }
-
+                ACLMessage queryMessage = createMessage(new PortfolioRequest(), ACLMessage.REQUEST, brokerAID);
+                queryMessage.setOntology(Ontology.PORTFOLIO_REQUEST);
+            }
+        });
+        addBehaviour(new OneShotBehaviour() {
+            @Override
+            public void action() {
+                ACLMessage queryMessage = createMessage(new ShowFundsRequest(0), ACLMessage.REQUEST, bankAID);
+                queryMessage.setOntology(Ontology.FUNDS_REQUEST);
+                send(queryMessage);
             }
         });
     }
 
-    protected <T> void sendMessage(T messageObject, int intent, AID... sellerAIDs) {
+    protected <T> ACLMessage createMessage(T messageObject, int intent, AID... sellerAIDs) {
         ACLMessage message = new ACLMessage(intent);
         message.setSender(this.getAID());
         Arrays.asList(sellerAIDs).forEach(message::addReceiver);
         message.setContent(gson.toJson(messageObject));
-        this.send(message);
+        return message;
     }
 
     protected <T> T receiveMessageResponse(Class<T> c) {
         ACLMessage message = receive();
         return message == null? null: gson.fromJson(message.getContent(), c);
-    }
-
-    protected void sendBuyOrder(BuyOrder buyOrder, AID... sellerAIDs) {
-        sendMessage(buyOrder, ACLMessage.PROPOSE, sellerAIDs);
-    }
-
-    protected BuyOrder receiveBuyOrderResponse() {
-        return receiveMessageResponse(BuyOrder.class);
-    }
-
-    protected void sendSellOrder(SellOrder sellOrder, AID... buyerAIDs) {
-        sendMessage(sellOrder, ACLMessage.PROPOSE, buyerAIDs);
-    }
-
-    protected SellOrder receiveSellOrderResponse() {
-        return receiveMessageResponse(SellOrder.class);
-    }
-
-    protected void sendTakeSharesRequest(TakeSharesRequest request) {
-        sendMessage(request, ACLMessage.PROPOSE, brokerAID);
-    }
-
-    protected TakeSharesRequest receiveTakeSharesRequestResponse() {
-        return receiveMessageResponse(TakeSharesRequest.class);
-    }
-
-    protected void sendPortfolioRequest(AID... playerAIDs) {
-        sendMessage(new PortfolioRequest(), ACLMessage.REQUEST, playerAIDs);
-    }
-
-    protected PortfolioRequest receivePortfolioRequestResponse() {
-        return receiveMessageResponse(PortfolioRequest.class);
     }
 }

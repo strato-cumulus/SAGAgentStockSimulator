@@ -12,9 +12,9 @@ import java.util.stream.Collectors;
 
 public class CheapestBuyStrategy extends Strategy {
 
-    CheapestStockComparator comparator = new CheapestStockComparator();
+    private CheapestStockComparator comparator = new CheapestStockComparator();
 
-    public Map<AID, BuyOrder> perform(int funds, Map<AID, PortfolioRequest> playerPortfolios) {
+    public Map<AID, List<BuyOrder>> perform(int funds, Map<AID, PortfolioRequest> playerPortfolios) {
         Map<AID, List<Share>> boughtShares = new LinkedHashMap<>();
         List<Pair<AID, List<Share>>> workingList = new ArrayList<>(playerPortfolios.keySet().size());
         for(AID aid: playerPortfolios.keySet()) {
@@ -39,7 +39,21 @@ public class CheapestBuyStrategy extends Strategy {
                 nextStock = takenShare.getStock();
             }
         }
-        return null;
+        Map<AID, List<BuyOrder>> buyOrders = new HashMap<>();
+        for(Map.Entry<AID, List<Share>> shareEntry: boughtShares.entrySet()) {
+            List<Share> shares = shareEntry.getValue();
+            Map<Stock, List<Share>> sharesPerStock = new HashMap<>();
+            for(Share share: shares) {
+                sharesPerStock.putIfAbsent(share.getStock(), new ArrayList<>());
+                sharesPerStock.get(share.getStock()).add(share);
+            }
+            List<BuyOrder> orders = new ArrayList<>(sharesPerStock.size());
+            for(Map.Entry<Stock, List<Share>> entry: sharesPerStock.entrySet()) {
+                orders.add(new BuyOrder(entry.getKey(), entry.getValue()));
+            }
+            buyOrders.put(shareEntry.getKey(), orders);
+        }
+        return buyOrders;
     }
 
     private class CheapestStockComparator implements Comparator<Pair<AID, List<Share>>> {
