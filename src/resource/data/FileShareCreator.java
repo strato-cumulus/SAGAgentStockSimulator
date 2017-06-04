@@ -36,13 +36,13 @@ public final class FileShareCreator extends ShareCreator {
     }
 
     @Override
-    public Map<Stock, Set<Share>> createShares() {
-        Map<Stock, Set<Share>> sharesPerStock = new TreeMap<>(Comparator.comparing(Stock::getTickerCode));
+    public Map<Stock, List<Share>> createShares() {
+        Map<Stock, List<Share>> sharesPerStock = new TreeMap<>(Comparator.comparing(Stock::getTickerCode));
         for(Map.Entry<Stock, Integer> shareAmount: shareAmounts.entrySet()) {
-            Set<Share> shares = IntStream
+            List<Share> shares = IntStream
                     .range(0, shareAmount.getValue())
-                    .mapToObj(i -> new Share(shareAmount.getKey()))
-                    .collect(Collectors.toSet());
+                    .mapToObj(i -> new Share(shareAmount.getKey(), 1))
+                    .collect(Collectors.toList());
             sharesPerStock.put(shareAmount.getKey(), shares);
         }
         return sharesPerStock;

@@ -8,6 +8,5 @@ import java.util.List;
 import java.util.Map;
 
 public class PortfolioRequest {
-
     public final Map<Stock, List<Share>> portfolio = new HashMap<>();
 }

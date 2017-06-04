@@ -2,8 +2,6 @@ package model.account;
 
 import model.Share;
 import model.Stock;
-import model.account.Account;
-
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -31,7 +29,7 @@ public class MasterAccount extends Account {
 
     @Override
     public Iterable<Share> takeShares(Stock stock, int amount) {
-        return IntStream.range(0, amount).mapToObj(o -> new Share(stock)).collect(Collectors.toList());
+        return IntStream.range(0, amount).mapToObj(o -> new Share(stock, 1)).collect(Collectors.toList());
     }
 
     public Map<Stock, Set<Share>> getSharesPerStock() {
