@@ -1,12 +1,16 @@
 package agent;
 
+import agent.util.AgentUtil;
 import com.google.gson.Gson;
+import com.sun.jmx.remote.internal.ArrayQueue;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import model.Ontology;
 import model.Share;
 import model.Stock;
 import model.account.Account;
@@ -17,6 +21,7 @@ import resource.ResourceCreationException;
 import resource.data.FileShareCreator;
 import resource.data.ShareCreator;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class BrokerAgent extends Agent {
     private ShareCreator shareCreator;
@@ -27,6 +32,9 @@ public class BrokerAgent extends Agent {
     private MessageTemplate portfolioTemplate = MessageTemplate.MatchOntology("portfolio");
     private MessageTemplate buyTemplate = MessageTemplate.MatchOntology("buy");
     private MessageTemplate sellTemplate = MessageTemplate.MatchOntology("sell");
+
+    private List<SellOrder> sellOrders = new LinkedList<>();
+    private List<BuyOrder> buyOrders = new LinkedList<>();
 
     private Gson gson = new Gson();
 
@@ -49,63 +57,62 @@ public class BrokerAgent extends Agent {
             private AID senderAID;
             @Override
             public void onTick() {
-                senderAID =
-                        receiveMessage(PortfolioRequest.class, portfolioTemplate).keySet().stream().findFirst().get();
-                portfolioRequest.portfolio.putAll(portfolio);
-                sendMessage(portfolioRequest, "portfolio", senderAID);
-                players.put(senderAID, new Account());
-                if (getTickCount() > 100) {
-                    stop();
+                ACLMessage message = receive(portfolioTemplate);
+                if(message == null) {
+                    block();
+                }
+                else {
+                    portfolioRequest = gson.fromJson(message.getContent(), PortfolioRequest.class);
+                    senderAID = message.getSender();
+                    portfolioRequest.portfolio.putAll(portfolio);
+                    send(AgentUtil.createMessage(getAID(), portfolioRequest, ACLMessage.REQUEST, Ontology.PORTFOLIO_REQUEST, senderAID));
+                    players.putIfAbsent(senderAID, new Account());
+                    if (getTickCount() > 100) {
+                        stop();
+                    }
                 }
             }
         });
 
-        //Buy order
-        addBehaviour(new CyclicBehaviour() {
-            private Map<AID, BuyOrder> messageContent = new HashMap<AID, BuyOrder>();
+        // Accept a BuyOrder and place it in the queue.
+        addBehaviour(new Behaviour() {
             private BuyOrder buyOrder;
-            private AID senderAID;
             @Override
             public void action() {
-                messageContent = receiveMessage(BuyOrder.class, buyTemplate);
-                senderAID = messageContent.keySet().stream().findFirst().get();
-                buyOrder = messageContent.get(senderAID);
-                //TODO
+                ACLMessage message = receive(buyTemplate);
+                if(message == null) {
+                    block();
+                }
+                else {
+                    buyOrder = gson.fromJson(message.getContent(), BuyOrder.class);
+                }
+            }
+
+            @Override
+            public boolean done() {
+                return false;
             }
         });
 
-        //Sell order
-        addBehaviour(new CyclicBehaviour() {
-            private Map<AID, SellOrder> messageContent = new HashMap<AID, SellOrder>();
+        // Accept a SellOrder and place it in the queue.
+        addBehaviour(new Behaviour() {
             private SellOrder sellOrder;
-            private AID senderAID;
             @Override
             public void action() {
-                messageContent = receiveMessage(SellOrder.class, buyTemplate);
-                senderAID = messageContent.keySet().stream().findFirst().get();
-                sellOrder = messageContent.get(senderAID);
-                //TODO
+                ACLMessage message = receive(sellTemplate);
+                if(message == null) {
+                    block();
+                }
+                else {
+                    sellOrder = gson.fromJson(message.getContent(), SellOrder.class);
+                }
+            }
+
+            @Override
+            public boolean done() {
+                return false;
             }
         });
-    }
-
-    protected <T> void sendMessage(T messageObject, String ontology, AID... sellerAIDs) {
-        ACLMessage message = new ACLMessage(0);
-        message.setOntology(ontology);
-        message.setSender(this.getAID());
-        Arrays.asList(sellerAIDs).forEach(message::addReceiver);
-        message.setContent(gson.toJson(messageObject));
-        this.send(message);
-    }
-
-    protected <T> Map<AID, T>  receiveMessage(Class<T> c, MessageTemplate messageTemplate) {
-        ACLMessage message = receive(messageTemplate);
-        if (message != null) {
-            Map<AID, T> returnValue = new HashMap<AID, T>();
-            returnValue.put(message.getSender(), gson.fromJson(message.getContent(), c));
-            return returnValue;
-        }
-        return null;
     }
 
     protected void initializeShares() {

@@ -1,5 +1,6 @@
 package agent;
 
+import agent.util.AgentUtil;
 import com.google.gson.Gson;
 import jade.core.AID;
 import jade.core.Agent;
@@ -28,30 +29,19 @@ public class PlayerAgent extends Agent {
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {
-                ACLMessage queryMessage = createMessage(new PortfolioRequest(), ACLMessage.REQUEST, brokerAID);
+                ACLMessage queryMessage = AgentUtil.createMessage(getAID(), new PortfolioRequest(), ACLMessage.REQUEST, brokerAID);
                 queryMessage.setOntology(Ontology.PORTFOLIO_REQUEST);
             }
         });
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {
-                ACLMessage queryMessage = createMessage(new ShowFundsRequest(0), ACLMessage.REQUEST, bankAID);
+                ACLMessage queryMessage = AgentUtil.createMessage(getAID(), new ShowFundsRequest(0), ACLMessage.REQUEST, bankAID);
                 queryMessage.setOntology(Ontology.FUNDS_REQUEST);
                 send(queryMessage);
             }
         });
     }
 
-    protected <T> ACLMessage createMessage(T messageObject, int intent, AID... sellerAIDs) {
-        ACLMessage message = new ACLMessage(intent);
-        message.setSender(this.getAID());
-        Arrays.asList(sellerAIDs).forEach(message::addReceiver);
-        message.setContent(gson.toJson(messageObject));
-        return message;
-    }
 
-    protected <T> T receiveMessageResponse(Class<T> c) {
-        ACLMessage message = receive();
-        return message == null? null: gson.fromJson(message.getContent(), c);
-    }
 }
