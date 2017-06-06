@@ -1,6 +1,5 @@
 package model.account;
 
-import model.Share;
 import model.Stock;
 
 import java.util.*;
@@ -9,7 +8,7 @@ public class Account {
 
     protected int funds = 0;
     protected int clear = 0;
-    protected Map<Stock, Set<Share>> sharesPerStock = new HashMap<>();
+    protected Map<Stock, Set<Stock>> sharesPerStock = new HashMap<>();
 
     public Account() {
     }
@@ -53,23 +52,23 @@ public class Account {
         return sharesPerStock.get(stock).size();
     }
 
-    public void putShares(Iterable<Share> shares) {
-        for(Share share: shares) {
-            Set<Share> stockShares = this.sharesPerStock.computeIfAbsent(share.getStock(), s -> new HashSet<>());
-            assert(stockShares != null);
-            stockShares.add(share);
+    public void putShares(Iterable<Stock> shares) {
+        for(Stock stock: shares) {
+            Set<Stock> stocks = this.sharesPerStock.computeIfAbsent(stock, s -> new HashSet<>());
+            assert(stocks != null);
+            stocks.add(stock);
         }
     }
 
-    public Iterable<Share> takeShares(Stock stock, int amount) {
-        Set<Share> shares = this.sharesPerStock.get(stock);
+    public Iterable<Stock> takeStocks(Stock stock, int amount) {
+        Set<Stock> shares = this.sharesPerStock.get(stock);
         assert shares != null && shares.size() >= amount;
-        Collection<Share> collectedShares = new ArrayList<>(amount);
-        Iterator<Share> shareIterator = shares.iterator();
+        Collection<Stock> collectedStocks = new ArrayList<>(amount);
+        Iterator<Stock> shareIterator = shares.iterator();
         for(int a = 0; a < amount; ++a) {
-            collectedShares.add(shareIterator.next());
+            collectedStocks.add(shareIterator.next());
             shareIterator.remove();
         }
-        return collectedShares;
+        return collectedStocks;
     }
 }

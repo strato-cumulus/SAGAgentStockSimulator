@@ -1,6 +1,6 @@
 package resource.data;
 
-import model.Share;
+import model.Portfolio;
 import model.Stock;
 import resource.ResourceCreationException;
 
@@ -9,8 +9,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public final class FileShareCreator extends ShareCreator {
 
@@ -21,7 +19,7 @@ public final class FileShareCreator extends ShareCreator {
     }
 
     @Override
-    public Map<Stock, List<Share>> createShares() throws ResourceCreationException {
+    public Portfolio createShares() throws ResourceCreationException {
         Properties fileStockDefinitions = new Properties();
         try {
             fileStockDefinitions.load(new InputStreamReader(new FileInputStream(file)));
@@ -30,23 +28,19 @@ public final class FileShareCreator extends ShareCreator {
             throw new ResourceCreationException((e instanceof FileNotFoundException)?"File not found":"Malformed input");
         }
         Set<String> tickerCodes = fileStockDefinitions.stringPropertyNames();
-        Map<Stock, List<Share>> sharesPerStock = new TreeMap<>(Comparator.comparing(Stock::getTickerCode));
+        Portfolio portfolio = new Portfolio();
         for(String tickerCode: tickerCodes) {
             String[] shareData = fileStockDefinitions.getProperty(tickerCode).split(";");
             try {
                 int amount = Integer.parseInt(shareData[0]);
                 int price = Integer.parseInt(shareData[1]);
                 Stock stock = new Stock(tickerCode);
-                List<Share> shares = IntStream
-                        .range(0, amount)
-                        .mapToObj(i -> new Share(stock, price))
-                        .collect(Collectors.toList());
-                sharesPerStock.put(stock, shares);
+                portfolio.addStock(stock, amount, price);
             }
             catch(NumberFormatException | ArrayIndexOutOfBoundsException e) {
                 throw new ResourceCreationException("Malformed input");
             }
         }
-        return sharesPerStock;
+        return portfolio;
     }
 }

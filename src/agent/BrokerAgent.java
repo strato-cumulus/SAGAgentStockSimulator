@@ -10,11 +10,10 @@ import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import model.Ontology;
-import model.Share;
+import model.Portfolio;
 import model.Stock;
 import model.account.Account;
 import model.order.BuyOrder;
-import model.order.Order;
 import model.order.SellOrder;
 import model.request.BlockFundsRequest;
 import model.request.PortfolioRequest;
@@ -22,7 +21,6 @@ import resource.ResourceCreationException;
 import resource.data.FileShareCreator;
 import resource.data.ShareCreator;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class BrokerAgent extends Agent {
 
@@ -30,7 +28,7 @@ public class BrokerAgent extends Agent {
 
     private ShareCreator shareCreator;
     private int gameDuration;
-    private Map<Stock, List<Share>> portfolio;
+    private Portfolio portfolio;
     private Map<AID, Account> players;
 
     private MessageTemplate portfolioTemplate = MessageTemplate.MatchOntology("portfolio");
@@ -74,7 +72,7 @@ public class BrokerAgent extends Agent {
                 else {
                     portfolioRequest = gson.fromJson(message.getContent(), PortfolioRequest.class);
                     senderAID = message.getSender();
-                    portfolioRequest.portfolio.putAll(portfolio);
+                    portfolioRequest.portfolio.copy(portfolio);
                     send(AgentUtil.createMessage(getAID(), portfolioRequest, ACLMessage.REQUEST, Ontology.PORTFOLIO_REQUEST, senderAID));
                     players.putIfAbsent(senderAID, new Account());
                     if (getTickCount() > 100) {

@@ -1,19 +1,16 @@
 package model.order;
 
 import jade.core.AID;
-import model.Share;
 import model.Stock;
-import model.account.Account;
 
-import java.util.Collection;
 import java.util.Comparator;
 
 public class SellOrder extends Order {
 
     public final long unitPrice;
 
-    public SellOrder(Share share, int quantity, AID buyerAID, int unitPrice) {
-        super(share, quantity, buyerAID);
+    public SellOrder(Stock stock, int quantity, AID buyerAID, int unitPrice) {
+        super(stock, quantity, buyerAID);
         this.unitPrice = unitPrice;
     }
 

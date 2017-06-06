@@ -42,12 +42,12 @@ public class TransactionManager extends CyclicBehaviour {
             buyOrderLoop:
             for(BuyOrder buyOrder: buyOrders) {
                 for(SellOrder sellOrder: sellOrders) {
-                    if(buyOrder.getShare().getStock().equals(sellOrder.getShare().getStock()) && buyOrder.getShare().getPrice() >= buyOrder.getShare().getPrice()) {
+                    if(buyOrder.getStock().equals(sellOrder.getStock()) && buyOrder.getUnitPrice() >= sellOrder.getUnitPrice()) {
                         int transactionQuantity = buyOrder.getQuantity() > sellOrder.getQuantity() ? buyOrder.getQuantity() : sellOrder.getQuantity();
-                        int transactionUnitPrice = sellOrder.getShare().getPrice();
+                        int transactionUnitPrice = sellOrder.getUnitPrice();
                         transactions.add(new Transaction(buyOrder.getPlayerAID(),
                                                          sellOrder.getPlayerAID(),
-                                                         buyOrder.getShare(),
+                                                         buyOrder.getStock(),
                                                          transactionQuantity,
                                                          transactionUnitPrice
                                                          ));

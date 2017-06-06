@@ -1,16 +1,14 @@
 package model.request;
 
-import model.Share;
-
-import java.util.ArrayList;
-import java.util.List;
+import model.Stock;
 
 public class TakeSharesRequest {
 
+    public final Stock stock;
     public final int amount;
-    public final List<Share> shares = new ArrayList<>();
 
-    public TakeSharesRequest(int amount) {
+    public TakeSharesRequest(Stock stock, int amount) {
+        this.stock = stock;
         this.amount = amount;
     }
 }

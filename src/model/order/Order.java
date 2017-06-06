@@ -1,30 +1,27 @@
 package model.order;
 
 import jade.core.AID;
-import model.Share;
+import model.Stock;
 
 public abstract class Order {
 
-    protected final Share share;
+    protected final Stock stock;
     private int quantity;
+    private int unitPrice;
     private final AID playerAID;
 
-    public Order(Share share, int quantity, AID playerAID) {
-        this.share = share;
+    public Order(Stock stock, int quantity, AID playerAID) {
+        this.stock = stock;
         this.quantity = quantity;
         this.playerAID = playerAID;
     }
 
-    public Share getShare() {
-        return this.share;
+    public Stock getStock() {
+        return stock;
     }
 
     public int getQuantity() {
         return this.quantity;
-    }
-
-    public int getTotalPrice() {
-        return this.quantity * this.share.getPrice();
     }
 
     public AID getPlayerAID() {
@@ -33,5 +30,13 @@ public abstract class Order {
 
     public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+
+    public int getUnitPrice() {
+        return unitPrice;
+    }
+
+    public int getTotalPrice() {
+        return unitPrice * quantity;
     }
 }
