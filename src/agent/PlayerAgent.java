@@ -29,15 +29,15 @@ public class PlayerAgent extends Agent {
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {
-                ACLMessage queryMessage = AgentUtil.createMessage(getAID(), new PortfolioRequest(), ACLMessage.REQUEST, brokerAID);
-                queryMessage.setOntology(Ontology.PORTFOLIO_REQUEST);
+                ACLMessage queryMessage = AgentUtil.createMessage(getAID(), new PortfolioRequest(),  ACLMessage.REQUEST, Ontology.PORTFOLIO_REQUEST, brokerAID);
+               // queryMessage.setOntology(Ontology.PORTFOLIO_REQUEST);
             }
         });
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {
-                ACLMessage queryMessage = AgentUtil.createMessage(getAID(), new ShowFundsRequest(0), ACLMessage.REQUEST, bankAID);
-                queryMessage.setOntology(Ontology.FUNDS_REQUEST);
+                ACLMessage queryMessage = AgentUtil.createMessage(getAID(), new ShowFundsRequest(0), ACLMessage.REQUEST, Ontology.FUNDS_REQUEST, bankAID);
+                //queryMessage.setOntology(Ontology.FUNDS_REQUEST);
                 send(queryMessage);
             }
         });

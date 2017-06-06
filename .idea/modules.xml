@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/SAGAgentStockSimulator.iml" filepath="$PROJECT_DIR$/SAGAgentStockSimulator.iml" />
+      <module fileurl="file://$PROJECT_DIR$/SAG.iml" filepath="$PROJECT_DIR$/SAG.iml" />
     </modules>
   </component>
 </project>

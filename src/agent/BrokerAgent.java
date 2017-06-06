@@ -49,7 +49,7 @@ public class BrokerAgent extends Agent {
             doDelete();
         }
 
-        initializeShares();
+        //initializeShares();
 
         //Portfolio
         addBehaviour(new TickerBehaviour(this, 10) {
@@ -117,7 +117,7 @@ public class BrokerAgent extends Agent {
 
     protected void initializeShares() {
         try {
-            shareCreator = new FileShareCreator("shares.properties");
+            shareCreator = new FileShareCreator("src/shares.properties");
         } catch (ResourceCreationException e) {
             e.printStackTrace();
         }

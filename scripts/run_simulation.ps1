@@ -1,10 +1,10 @@
 ﻿
-$jade_path="C:\Users\marcin\Documents\jade_test\lib\jade.jar"
-$src_path="C:\Users\marcin\Documents\jade_test\out"
-$player_class="HelloAgent"
-$broker_class="HelloAgent"
-$banker_class="HelloAgent"
-$class_path = $jade_path + ";" + $src_path
+$jade_path="E:\Workspace\GIT\SAG\lib\jade.jar"
+$out_path="E:\Workspace\GIT\SAG\out\production\SAG"
+$player_class="agent.BrokerAgent"
+$broker_class="agent.BrokerAgent"
+$banker_class="agent.BrokerAgent"
+$class_path = $jade_path + ";" + $out_path + ";E:\Workspace\GIT\SAG\lib\gson-2.8.1.jar"
 $container_name = "Stock market"
 $agents_array = [System.Collections.ArrayList]@()
 
@@ -30,8 +30,8 @@ for ( $i = 0; $i -lt $args[2]; $i++) {
   #Write-Host $i  
 }
 
-$agents_array.Add("Banker:" + $banker_class + "(" + $i + ")")
-$agents_array.Add("Broker:" + $broker_class + "(" + $i + ")")
+#$agents_array.Add("Banker:" + $banker_class + "(" + $i + ")")
+#$agents_array.Add("Broker:" + $broker_class + "(" + $i + ")")
 
 $agents_list = $agents_array -Join ';' 
 
