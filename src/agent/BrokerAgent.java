@@ -2,11 +2,10 @@ package agent;
 
 import agent.util.AgentUtil;
 import com.google.gson.Gson;
-import com.sun.jmx.remote.internal.ArrayQueue;
+import controller.manager.TransactionManager;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
-import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -15,13 +14,13 @@ import model.Share;
 import model.Stock;
 import model.account.Account;
 import model.order.BuyOrder;
+import model.order.Order;
 import model.order.SellOrder;
 import model.request.PortfolioRequest;
 import resource.ResourceCreationException;
 import resource.data.FileShareCreator;
 import resource.data.ShareCreator;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class BrokerAgent extends Agent {
     private ShareCreator shareCreator;
@@ -30,6 +29,7 @@ public class BrokerAgent extends Agent {
     private Map<AID, Account> players;
 
     private MessageTemplate portfolioTemplate = MessageTemplate.MatchOntology("portfolio");
+    private MessageTemplate evaluate = MessageTemplate.MatchOntology("evaluate");
     private MessageTemplate buyTemplate = MessageTemplate.MatchOntology("buy");
     private MessageTemplate sellTemplate = MessageTemplate.MatchOntology("sell");
 
@@ -49,7 +49,11 @@ public class BrokerAgent extends Agent {
             doDelete();
         }
 
+        //TODO nie działa
         //initializeShares();
+
+        // add Transaction Manager
+        addBehaviour(new TransactionManager(this, sellOrders, buyOrders));
 
         //Portfolio
         addBehaviour(new TickerBehaviour(this, 10) {
@@ -74,7 +78,7 @@ public class BrokerAgent extends Agent {
             }
         });
 
-        // Accept a BuyOrder and place it in the queue.
+        // Accept a BuyOrder and place it in the queue, pass info to transaction manager to evaluate transactions
         addBehaviour(new Behaviour() {
             private BuyOrder buyOrder;
             @Override
@@ -85,6 +89,8 @@ public class BrokerAgent extends Agent {
                 }
                 else {
                     buyOrder = gson.fromJson(message.getContent(), BuyOrder.class);
+                    buyOrders.add(buyOrder);
+                    send(AgentUtil.createMessage(getAID(), "", ACLMessage.PROPAGATE, Ontology.EVALUATE, getAID()));
                 }
             }
 
@@ -94,7 +100,7 @@ public class BrokerAgent extends Agent {
             }
         });
 
-        // Accept a SellOrder and place it in the queue.
+        // Accept a SellOrder and place it in the queue,  pass info to transaction manager to evaluate transactions
         addBehaviour(new Behaviour() {
             private SellOrder sellOrder;
             @Override
@@ -105,6 +111,8 @@ public class BrokerAgent extends Agent {
                 }
                 else {
                     sellOrder = gson.fromJson(message.getContent(), SellOrder.class);
+                    sellOrders.add(sellOrder);
+                    send(AgentUtil.createMessage(getAID(), "", ACLMessage.PROPAGATE, Ontology.EVALUATE, getAID()));
                 }
             }
 
