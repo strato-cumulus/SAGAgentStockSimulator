@@ -16,11 +16,13 @@ import model.account.Account;
 import model.order.BuyOrder;
 import model.order.Order;
 import model.order.SellOrder;
+import model.request.BlockFundsRequest;
 import model.request.PortfolioRequest;
 import resource.ResourceCreationException;
 import resource.data.FileShareCreator;
 import resource.data.ShareCreator;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class BrokerAgent extends Agent {
 
@@ -35,6 +37,7 @@ public class BrokerAgent extends Agent {
     private MessageTemplate evaluate = MessageTemplate.MatchOntology("evaluate");
     private MessageTemplate buyTemplate = MessageTemplate.MatchOntology("buy");
     private MessageTemplate sellTemplate = MessageTemplate.MatchOntology("sell");
+    private MessageTemplate blockTemplate = MessageTemplate.MatchOntology(Ontology.BLOCK_FUNDS);
 
     private List<SellOrder> sellOrders = new LinkedList<>();
     private List<BuyOrder> buyOrders = new LinkedList<>();
@@ -92,8 +95,30 @@ public class BrokerAgent extends Agent {
                 }
                 else {
                     buyOrder = gson.fromJson(message.getContent(), BuyOrder.class);
-                    buyOrders.add(buyOrder);
+                    int price = buyOrder.getShares().stream().mapToInt(Share::getPrice).sum();
+                    send(AgentUtil.createMessage(getAID(), new BlockFundsRequest(message.getSender(), price), ACLMessage.REQUEST, Ontology.BLOCK_FUNDS, BankAgent.aid));
                     send(AgentUtil.createMessage(getAID(), "", ACLMessage.PROPAGATE, Ontology.EVALUATE, getAID()));
+                    // check for positive/negative response
+                    addBehaviour(new Behaviour() {
+                        boolean done = false;
+                        @Override
+                        public void action() {
+                            ACLMessage blockResponse = receive(blockTemplate);
+                            if(blockResponse == null) block();
+                            else {
+                                BlockFundsRequest request = gson.fromJson(blockResponse.getContent(), BlockFundsRequest.class);
+                                if(request.result) {
+                                    buyOrders.add(buyOrder);
+                                }
+                                done = true;
+                            }
+                        }
+
+                        @Override
+                        public boolean done() {
+                            return done;
+                        }
+                    });
                 }
             }
 

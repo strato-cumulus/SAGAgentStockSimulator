@@ -19,4 +19,12 @@ public abstract class Order {
         this.shares = new ArrayList<>(shares.size());
         this.shares.addAll(shares);
     }
+
+    public Stock getStock() {
+        return stock;
+    }
+
+    public List<Share> getShares() {
+        return shares;
+    }
 }
