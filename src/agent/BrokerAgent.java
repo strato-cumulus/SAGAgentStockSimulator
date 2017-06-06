@@ -126,10 +126,14 @@ public class BrokerAgent extends Agent {
     protected void initializeShares() {
         try {
             shareCreator = new FileShareCreator("src/shares.properties");
+            portfolio = shareCreator.createShares();
         } catch (ResourceCreationException e) {
             e.printStackTrace();
         }
-        portfolio = shareCreator.createShares();
+    }
+
+    public static void main(String[] args) {
+        (new BrokerAgent()).initializeShares();
     }
 }
 

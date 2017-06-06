@@ -14,9 +14,14 @@ import java.util.stream.IntStream;
 
 public final class FileShareCreator extends ShareCreator {
 
-    private Map<Stock, Integer> shareAmounts;
+    private final String file;
 
     public FileShareCreator(String file) throws ResourceCreationException {
+        this.file = file;
+    }
+
+    @Override
+    public Map<Stock, List<Share>> createShares() throws ResourceCreationException {
         Properties fileStockDefinitions = new Properties();
         try {
             fileStockDefinitions.load(new InputStreamReader(new FileInputStream(file)));
@@ -25,25 +30,22 @@ public final class FileShareCreator extends ShareCreator {
             throw new ResourceCreationException((e instanceof FileNotFoundException)?"File not found":"Malformed input");
         }
         Set<String> tickerCodes = fileStockDefinitions.stringPropertyNames();
-        try {
-            this.shareAmounts = tickerCodes
-                    .stream()
-                    .collect(Collectors.toMap(Stock::new, Integer::parseInt));
-        }
-        catch (NumberFormatException e) {
-            throw new ResourceCreationException("Malformed input");
-        }
-    }
-
-    @Override
-    public Map<Stock, List<Share>> createShares() {
         Map<Stock, List<Share>> sharesPerStock = new TreeMap<>(Comparator.comparing(Stock::getTickerCode));
-        for(Map.Entry<Stock, Integer> shareAmount: shareAmounts.entrySet()) {
-            List<Share> shares = IntStream
-                    .range(0, shareAmount.getValue())
-                    .mapToObj(i -> new Share(shareAmount.getKey(), 1))
-                    .collect(Collectors.toList());
-            sharesPerStock.put(shareAmount.getKey(), shares);
+        for(String tickerCode: tickerCodes) {
+            String[] shareData = fileStockDefinitions.getProperty(tickerCode).split(";");
+            try {
+                int amount = Integer.parseInt(shareData[0]);
+                int price = Integer.parseInt(shareData[1]);
+                Stock stock = new Stock(tickerCode);
+                List<Share> shares = IntStream
+                        .range(0, amount)
+                        .mapToObj(i -> new Share(stock, price))
+                        .collect(Collectors.toList());
+                sharesPerStock.put(stock, shares);
+            }
+            catch(NumberFormatException | ArrayIndexOutOfBoundsException e) {
+                throw new ResourceCreationException("Malformed input");
+            }
         }
         return sharesPerStock;
     }
