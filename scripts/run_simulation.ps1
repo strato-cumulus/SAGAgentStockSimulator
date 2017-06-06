@@ -1,10 +1,11 @@
 ﻿
-$jade_path="E:\Workspace\GIT\SAG\lib\jade.jar"
-$out_path="E:\Workspace\GIT\SAG\out\production\SAG"
-$player_class="agent.BrokerAgent"
+$project_path=$PSScriptRoot+"\.."
+$jade_path=$project_path+"\lib\jade.jar"
+$out_path=$project_path+"\out\production\SAG"
+$player_class="agent.PlayerAgent"
 $broker_class="agent.BrokerAgent"
-$banker_class="agent.BrokerAgent"
-$class_path = $jade_path + ";" + $out_path + ";E:\Workspace\GIT\SAG\lib\gson-2.8.1.jar"
+$banker_class="agent.BankAgent"
+$class_path = $jade_path + ";" + $out_path + ";" + $project_path+"\lib\gson-2.8.1.jar"
 $container_name = "Stock market"
 $agents_array = [System.Collections.ArrayList]@()
 
