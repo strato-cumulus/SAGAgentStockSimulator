@@ -14,15 +14,16 @@ import model.Share;
 import model.Stock;
 import model.account.Account;
 import model.order.BuyOrder;
-import model.order.Order;
 import model.order.SellOrder;
 import model.request.BlockFundsRequest;
 import model.request.PortfolioRequest;
 import resource.ResourceCreationException;
 import resource.data.FileShareCreator;
 import resource.data.ShareCreator;
-import java.util.*;
-import java.util.stream.Collectors;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 public class BrokerAgent extends Agent {
 

@@ -12,8 +12,6 @@ import model.request.PortfolioRequest;
 import model.request.ShowFundsRequest;
 import strategy.Strategy;
 
-import java.util.Arrays;
-
 public class PlayerAgent extends Agent {
 
     private Gson gson = new Gson();

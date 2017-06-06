@@ -12,8 +12,8 @@ public class SellOrder extends Order {
 
     public final long unitPrice;
 
-    public SellOrder(Share share, int quantity, AID buyerAID, int unitPrice) {
-        super(share, quantity, buyerAID);
+    public SellOrder(Share share, int quantity, String sellerName, int unitPrice) {
+        super(share, quantity, sellerName);
         this.unitPrice = unitPrice;
     }
 

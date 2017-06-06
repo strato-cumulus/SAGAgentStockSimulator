@@ -7,35 +7,35 @@ import model.Share;
  * Created by Marcin on 06.06.2017.
  */
 public class Transaction {
-    private AID buyerAID;
-    private AID sellerAID;
+    private String buyerName;
+    private String sellerName;
     private Share transactionShare;
     private int transactionQuantity;
     private int transactionPrice;
 
-    public Transaction(AID buyerAID, AID sellerAID, Share transactionShare, int transactionQuantity, int transactionPrice) {
-        this.buyerAID = buyerAID;
-        this.sellerAID = sellerAID;
+    public Transaction(String buyerAID, String sellerName, Share transactionShare, int transactionQuantity, int transactionPrice) {
+        this.buyerName = buyerName;
+        this.sellerName = sellerName;
         this.transactionShare = transactionShare;
         this.transactionQuantity = transactionQuantity;
         this.transactionPrice = transactionPrice;
 
     }
 
-    public AID getBuyerAID() {
-        return buyerAID;
+    public String getBuyerName() {
+        return buyerName;
     }
 
-    public void setBuyerAID(AID buyerAID) {
-        this.buyerAID = buyerAID;
+    public void setBuyerName(String buyerName) {
+        this.buyerName = buyerName;
     }
 
-    public AID getSellerAID() {
-        return sellerAID;
+    public String getSellerName() {
+        return sellerName;
     }
 
-    public void setSellerAID(AID sellerAID) {
-        this.sellerAID = sellerAID;
+    public void setSellerName(String sellerName) {
+        this.sellerName = sellerName;
     }
 
     public Share getTransactionShare() {

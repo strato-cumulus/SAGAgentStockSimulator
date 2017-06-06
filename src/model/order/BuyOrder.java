@@ -10,7 +10,7 @@ import java.util.List;
 
 public class BuyOrder extends Order {
 
-    public BuyOrder(Share share, int quantity, AID buyerAID) {
-        super(share, quantity, buyerAID);
+    public BuyOrder(Share share, int quantity, String buyerName) {
+        super(share, quantity, buyerName);
     }
 }

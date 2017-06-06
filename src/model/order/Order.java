@@ -7,12 +7,12 @@ public abstract class Order {
 
     protected final Share share;
     private int quantity;
-    private final AID playerAID;
+    private final String playerName;
 
-    public Order(Share share, int quantity, AID playerAID) {
+    public Order(Share share, int quantity, String playerName) {
         this.share = share;
         this.quantity = quantity;
-        this.playerAID = playerAID;
+        this.playerName = playerName;
     }
 
     public Share getShare() {
@@ -27,8 +27,8 @@ public abstract class Order {
         return this.quantity * this.share.getPrice();
     }
 
-    public AID getPlayerAID() {
-        return this.playerAID;
+    public String getPlayerName() {
+        return this.playerName;
     }
 
     public void setQuantity(int quantity) {
