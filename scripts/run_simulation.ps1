@@ -21,9 +21,9 @@ for ( $i = 0; $i -lt $args[0]; $i++) {
     $agents_array.Add($agents_names[0] + "_" + $i + ":" + $player_class + "(CheapestBuy, 1500)")
 }
 
-
-#$agents_array.Add("Banker:" + $banker_class + "(" + $i + ")")
-#$agents_array.Add("Broker:" + $broker_class + "(" + $i + ")")
+	
+$agents_array.Add("bank-0:" + $banker_class)
+$agents_array.Add("broker-0:" + $broker_class)
 
 $agents_list = $agents_array -Join ';' 
 
