@@ -7,6 +7,7 @@ import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.lang.acl.ACLMessage;
 import model.Ontology;
+import model.request.AddAccountRequest;
 import model.request.PortfolioRequest;
 import model.request.ShowFundsRequest;
 import strategy.Strategy;
@@ -26,7 +27,13 @@ public class PlayerAgent extends Agent {
         bankAID = BankAgent.aid;
         brokerAID = BrokerAgent.aid;
         strategy = Strategy.fromString((String) getArguments()[0]);
-        System.out.println("Player");
+        addBehaviour(new OneShotBehaviour() {
+            @Override
+            public void action() {
+                AddAccountRequest accountRequest = new AddAccountRequest(this.getAgent().getAID(), Integer.parseInt((String) getArguments()[1]));
+                ACLMessage queryMessage = AgentUtil.createMessage(getAID(), accountRequest,  ACLMessage.REQUEST, Ontology.ADD_ACCOUNT, bankAID);
+            }
+        });
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {

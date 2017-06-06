@@ -1,5 +1,6 @@
 package controller.manager;
 
+import agent.BankAgent;
 import agent.util.AgentUtil;
 import jade.core.AID;
 import jade.core.Agent;
@@ -21,7 +22,6 @@ import java.util.List;
 public class TransactionManager extends CyclicBehaviour {
 
     private Agent agent;
-    public static final AID bankAID = new AID("bank-0", AID.ISLOCALNAME);
     private List<SellOrder> sellOrders;
     private List<BuyOrder> buyOrders;
     private List<Transaction> transactions;
@@ -56,7 +56,7 @@ public class TransactionManager extends CyclicBehaviour {
                         if(buyOrder.getQuantity()==0) buyOrders.remove(buyOrder);
                         if(sellOrder.getQuantity()==0) sellOrders.remove(sellOrder);
                         CommitTransactionRequest commitTransactionRequest = new CommitTransactionRequest(buyOrder.getPlayerAID(), transactionUnitPrice*transactionQuantity);
-                        agent.send(AgentUtil.createMessage(agent.getAID(), commitTransactionRequest, ACLMessage.REQUEST, Ontology.COMMIT_TRANSACTION, bankAID));
+                        agent.send(AgentUtil.createMessage(agent.getAID(), commitTransactionRequest, ACLMessage.REQUEST, Ontology.COMMIT_TRANSACTION, BankAgent.aid));
                         //TODO calculate price
                         break buyOrderLoop;
                     }
