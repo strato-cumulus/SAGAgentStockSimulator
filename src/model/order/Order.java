@@ -1,30 +1,33 @@
 package model.order;
 
+import jade.core.AID;
 import model.Share;
-import model.Stock;
-import model.account.Account;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
 
 public abstract class Order {
 
-    protected final Stock stock;
-    protected final List<Share> shares;
+    protected final Share share;
+    private int quantity;
+    private final AID playerAID;
 
-    public Order(Stock stock,Collection<Share> shares) {
-        this.stock = stock;
-        this.shares = new ArrayList<>(shares.size());
-        this.shares.addAll(shares);
+    public Order(Share share, int quantity, AID playerAID) {
+        this.share = share;
+        this.quantity = quantity;
+        this.playerAID = playerAID;
     }
 
-    public Stock getStock() {
-        return stock;
+    public Share getShare() {
+        return this.share;
     }
 
-    public List<Share> getShares() {
-        return shares;
+    public int getQuantity() {
+        return this.quantity;
+    }
+
+    public int getTotalPrice() {
+        return this.quantity * this.share.getPrice();
+    }
+
+    public AID getPlayerAID() {
+        return this.playerAID;
     }
 }

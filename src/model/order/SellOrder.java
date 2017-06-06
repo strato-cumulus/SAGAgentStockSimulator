@@ -1,5 +1,6 @@
 package model.order;
 
+import jade.core.AID;
 import model.Share;
 import model.Stock;
 import model.account.Account;
@@ -11,8 +12,8 @@ public class SellOrder extends Order {
 
     public final long unitPrice;
 
-    public SellOrder(Stock stock, long unitPrice, Collection<Share> shares) {
-        super(stock, shares);
+    public SellOrder(Share share, int quantity, AID buyerAID, int unitPrice) {
+        super(share, quantity, buyerAID);
         this.unitPrice = unitPrice;
     }
 

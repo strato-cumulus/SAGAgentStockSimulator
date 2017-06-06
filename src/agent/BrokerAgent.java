@@ -95,7 +95,7 @@ public class BrokerAgent extends Agent {
                 }
                 else {
                     buyOrder = gson.fromJson(message.getContent(), BuyOrder.class);
-                    int price = buyOrder.getShares().stream().mapToInt(Share::getPrice).sum();
+                    int price = buyOrder.getTotalPrice();
                     send(AgentUtil.createMessage(getAID(), new BlockFundsRequest(message.getSender(), price), ACLMessage.REQUEST, Ontology.BLOCK_FUNDS, BankAgent.aid));
                     send(AgentUtil.createMessage(getAID(), "", ACLMessage.PROPAGATE, Ontology.EVALUATE, getAID()));
                     // check for positive/negative response
