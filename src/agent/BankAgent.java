@@ -42,7 +42,6 @@ public class BankAgent extends Agent {
                 else {
                     AddAccountRequest request = gson.fromJson(message.getContent(), AddAccountRequest.class);
                     accounts.putIfAbsent(request.aid, new Account(request.initialFunds));
-                    System.out.println("player: " + request.initialFunds);
                 }
             }
 

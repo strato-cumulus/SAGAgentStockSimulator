@@ -31,7 +31,7 @@ public class PlayerAgent extends Agent {
             @Override
             public void action() {
                 AddAccountRequest accountRequest = new AddAccountRequest(this.getAgent().getAID(), Integer.parseInt((String) getArguments()[1]));
-                ACLMessage queryMessage = AgentUtil.createMessage(getAID(), accountRequest,  ACLMessage.REQUEST, Ontology.ADD_ACCOUNT, bankAID);
+                send(AgentUtil.createMessage(getAID(), accountRequest,  ACLMessage.REQUEST, Ontology.ADD_ACCOUNT, bankAID));
             }
         });
         addBehaviour(new OneShotBehaviour() {
