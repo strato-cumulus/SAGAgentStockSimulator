@@ -4,11 +4,11 @@ import jade.core.AID;
 
 public class AddAccountRequest {
 
-    public final AID aid;
+    public final String agentName;
     public final int initialFunds;
 
-    public AddAccountRequest(AID aid, int initialFunds) {
-        this.aid = aid;
+    public AddAccountRequest(String agentName, int initialFunds) {
+        this.agentName = agentName;
         this.initialFunds = initialFunds;
     }
 }

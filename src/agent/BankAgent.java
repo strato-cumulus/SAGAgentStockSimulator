@@ -23,12 +23,12 @@ public class BankAgent extends Agent {
     public static final AID aid = new AID("bank-0", AID.ISLOCALNAME);
     private Gson gson = new Gson();
 
-    private final MessageTemplate addAccountTemplate = MessageTemplate.and(MessageTemplate.MatchSender(BrokerAgent.aid), MessageTemplate.MatchOntology(Ontology.ADD_ACCOUNT));
+    private final MessageTemplate addAccountTemplate = MessageTemplate.MatchOntology(Ontology.ADD_ACCOUNT);
     private final MessageTemplate checkFundsTemplate = MessageTemplate.MatchOntology(Ontology.CHECK_FUNDS);
     private final MessageTemplate blockFundsTemplate = MessageTemplate.and(MessageTemplate.MatchSender(BrokerAgent.aid), MessageTemplate.MatchOntology(Ontology.BLOCK_FUNDS));
     private final MessageTemplate commitTransactionTemplate = MessageTemplate.and(MessageTemplate.MatchSender(BrokerAgent.aid), MessageTemplate.MatchOntology(Ontology.COMMIT_TRANSACTION));
 
-    private Map<AID, Account> accounts = new HashMap<>();
+    private Map<String, Account> accounts = new HashMap<>();
 
     @Override
     public void setup() {
@@ -41,7 +41,7 @@ public class BankAgent extends Agent {
                 if(message == null) block();
                 else {
                     AddAccountRequest request = gson.fromJson(message.getContent(), AddAccountRequest.class);
-                    accounts.putIfAbsent(request.aid, new Account(request.initialFunds));
+                    accounts.putIfAbsent(request.agentName, new Account(request.initialFunds));
                 }
             }
 
