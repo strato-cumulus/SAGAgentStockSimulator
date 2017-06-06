@@ -26,6 +26,7 @@ public class PlayerAgent extends Agent {
         bankAID = BankAgent.aid;
         brokerAID = BrokerAgent.aid;
         strategy = Strategy.fromString((String) getArguments()[0]);
+        System.out.println("Player");
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {

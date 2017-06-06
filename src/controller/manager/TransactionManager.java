@@ -1,12 +1,16 @@
 package controller.manager;
 
+import agent.util.AgentUtil;
+import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.core.behaviours.CyclicBehaviour;
 import model.Ontology;
 import model.order.BuyOrder;
 import model.order.SellOrder;
+import model.request.BlockFundsRequest;
+import model.request.CommitTransactionRequest;
 import model.transaction.Transaction;
 
 import java.util.List;
@@ -17,6 +21,7 @@ import java.util.List;
 public class TransactionManager extends CyclicBehaviour {
 
     private Agent agent;
+    public static final AID bankAID = new AID("bank-0", AID.ISLOCALNAME);
     private List<SellOrder> sellOrders;
     private List<BuyOrder> buyOrders;
     private List<Transaction> transactions;
@@ -27,15 +32,36 @@ public class TransactionManager extends CyclicBehaviour {
         this.sellOrders = sellOrders;
         this.buyOrders = buyOrders;
     }
+
     @Override
     public void action() {
         ACLMessage message = agent.receive(evalTemplate);
         if (message == null) {
             block();
         } else {
-
-            //transaction evaluation
-
+            buyOrderLoop:
+            for(BuyOrder buyOrder: buyOrders) {
+                for(SellOrder sellOrder: sellOrders) {
+                    if(buyOrder.getShare().getStock().equals(sellOrder.getShare().getStock()) && buyOrder.getShare().getPrice() >= buyOrder.getShare().getPrice()) {
+                        int transactionQuantity = buyOrder.getQuantity() > sellOrder.getQuantity() ? buyOrder.getQuantity() : sellOrder.getQuantity();
+                        int transactionUnitPrice = sellOrder.getShare().getPrice();
+                        transactions.add(new Transaction(buyOrder.getPlayerAID(),
+                                                         sellOrder.getPlayerAID(),
+                                                         buyOrder.getShare(),
+                                                         transactionQuantity,
+                                                         transactionUnitPrice
+                                                         ));
+                        buyOrder.setQuantity(buyOrder.getQuantity()-transactionQuantity);
+                        sellOrder.setQuantity(sellOrder.getQuantity()-transactionQuantity);
+                        if(buyOrder.getQuantity()==0) buyOrders.remove(buyOrder);
+                        if(sellOrder.getQuantity()==0) sellOrders.remove(sellOrder);
+                        CommitTransactionRequest commitTransactionRequest = new CommitTransactionRequest(buyOrder.getPlayerAID(), transactionUnitPrice*transactionQuantity);
+                        agent.send(AgentUtil.createMessage(agent.getAID(), commitTransactionRequest, ACLMessage.REQUEST, Ontology.COMMIT_TRANSACTION, bankAID));
+                        //TODO calculate price
+                        break buyOrderLoop;
+                    }
+                }
+            }
         }
     }
 }

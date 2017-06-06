@@ -49,7 +49,7 @@ public class CheapestBuyStrategy extends Strategy {
             }
             List<BuyOrder> orders = new ArrayList<>(sharesPerStock.size());
             for(Map.Entry<Stock, List<Share>> entry: sharesPerStock.entrySet()) {
-                orders.add(new BuyOrder(entry.getKey(), entry.getValue()));
+                //orders.add(new BuyOrder(entry.getValue(), entry.getValue().size(), shareEntry.getKey()));
             }
             buyOrders.put(shareEntry.getKey(), orders);
         }

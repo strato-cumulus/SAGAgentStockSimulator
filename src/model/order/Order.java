@@ -30,4 +30,8 @@ public abstract class Order {
     public AID getPlayerAID() {
         return this.playerAID;
     }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
 }

@@ -10,6 +10,7 @@ import java.util.Map;
 public abstract class Strategy {
 
     public static Strategy fromString(String strategyName) {
+        System.out.println("Strategia: "+strategyName);
         switch(strategyName) {
             case "CheapestBuy": return new CheapestBuyStrategy();
         }
