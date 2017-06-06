@@ -4,17 +4,17 @@ import jade.core.AID;
 
 public class CheckFundsRequest {
 
-    public final AID accountAID;
+    public final String accountName;
     public final int funds;
     public final int clear;
 
-    public CheckFundsRequest(AID accountAID, int funds, int clear) {
-        this.accountAID = accountAID;
+    public CheckFundsRequest(String accountName, int funds, int clear) {
+        this.accountName = accountName;
         this.funds = funds;
         this.clear = clear;
     }
 
-    public CheckFundsRequest(AID accountAID) {
-        this(accountAID, 0, 0);
+    public CheckFundsRequest(String accountName) {
+        this(accountName, 0, 0);
     }
 }

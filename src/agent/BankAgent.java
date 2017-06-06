@@ -59,8 +59,8 @@ public class BankAgent extends Agent {
                 if (message == null) block();
                 else {
                     CheckFundsRequest query = gson.fromJson(message.getContent(), CheckFundsRequest.class);
-                    Account account = accounts.get(query.accountAID);
-                    CheckFundsRequest reply = new CheckFundsRequest(query.accountAID, account.getFunds(), account.getClear());
+                    Account account = accounts.get(query.accountName);
+                    CheckFundsRequest reply = new CheckFundsRequest(query.accountName, account.getFunds(), account.getClear());
                     send(AgentUtil.createMessage(getAID(), reply, ACLMessage.INFORM, Ontology.CHECK_FUNDS, BrokerAgent.aid));
                 }
             }
@@ -80,7 +80,7 @@ public class BankAgent extends Agent {
                 if(message == null) block();
                 else {
                     BlockFundsRequest query = gson.fromJson(message.getContent(), BlockFundsRequest.class);
-                    Account account = accounts.get(query.aid);
+                    Account account = accounts.get(query.agentName);
                     boolean blockResult = true;
                     if(query.blockAmount > 0) {
                         blockResult = account.blockFunds(query.blockAmount);
@@ -88,7 +88,7 @@ public class BankAgent extends Agent {
                     else {
                         account.unblockFunds(query.blockAmount);
                     }
-                    BlockFundsRequest reply = new BlockFundsRequest(aid, query.blockAmount, blockResult);
+                    BlockFundsRequest reply = new BlockFundsRequest(aid.getName(), query.blockAmount, blockResult);
                     send(AgentUtil.createMessage(getAID(), reply, ACLMessage.INFORM, Ontology.BLOCK_FUNDS, BrokerAgent.aid));
                 }
             }
@@ -107,7 +107,7 @@ public class BankAgent extends Agent {
                 if(message == null) block();
                 else {
                     CommitTransactionRequest request = gson.fromJson(message.getContent(), CommitTransactionRequest.class);
-                    Account account = accounts.get(request.aid);
+                    Account account = accounts.get(request.agentName);
                     account.subtract(request.amount);
                 }
             }

@@ -55,7 +55,7 @@ public class TransactionManager extends CyclicBehaviour {
                         sellOrder.setQuantity(sellOrder.getQuantity()-transactionQuantity);
                         if(buyOrder.getQuantity()==0) buyOrders.remove(buyOrder);
                         if(sellOrder.getQuantity()==0) sellOrders.remove(sellOrder);
-                        CommitTransactionRequest commitTransactionRequest = new CommitTransactionRequest(buyOrder.getPlayerAID(), transactionUnitPrice*transactionQuantity);
+                        CommitTransactionRequest commitTransactionRequest = new CommitTransactionRequest(buyOrder.getPlayerAID().getName(), transactionUnitPrice*transactionQuantity);
                         agent.send(AgentUtil.createMessage(agent.getAID(), commitTransactionRequest, ACLMessage.REQUEST, Ontology.COMMIT_TRANSACTION, BankAgent.aid));
                         //TODO calculate price
                         break buyOrderLoop;

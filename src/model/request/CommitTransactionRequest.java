@@ -4,11 +4,11 @@ import jade.core.AID;
 
 public class CommitTransactionRequest {
 
-    public final AID aid;
+    public final String agentName;
     public final int amount;
 
-    public CommitTransactionRequest(AID aid, int amount) {
-        this.aid = aid;
+    public CommitTransactionRequest(String agentName, int amount) {
+        this.agentName = agentName;
         this.amount = amount;
     }
 }

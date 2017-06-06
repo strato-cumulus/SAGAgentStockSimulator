@@ -10,11 +10,10 @@ import java.util.stream.IntStream;
 public class MasterAccount extends Account {
 
     @Override
-    public long getFunds() {
-        return Long.MAX_VALUE;
+    public int getFunds() {
+        return Integer.MAX_VALUE;
     }
 
-    @Override
     public void setFunds(long funds) {
     }
 
