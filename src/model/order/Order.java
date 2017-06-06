@@ -8,12 +8,12 @@ public abstract class Order {
     protected final Stock stock;
     private int quantity;
     private int unitPrice;
-    private final AID playerAID;
+    private final String playerName;
 
-    public Order(Stock stock, int quantity, AID playerAID) {
+    public Order(Stock stock, int quantity, String playerName) {
         this.stock = stock;
         this.quantity = quantity;
-        this.playerAID = playerAID;
+        this.playerName = playerName;
     }
 
     public Stock getStock() {
@@ -24,8 +24,8 @@ public abstract class Order {
         return this.quantity;
     }
 
-    public AID getPlayerAID() {
-        return this.playerAID;
+    public String getPlayerName() {
+        return this.playerName;
     }
 
     public void setQuantity(int quantity) {

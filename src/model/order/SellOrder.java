@@ -9,8 +9,8 @@ public class SellOrder extends Order {
 
     public final long unitPrice;
 
-    public SellOrder(Stock stock, int quantity, AID buyerAID, int unitPrice) {
-        super(stock, quantity, buyerAID);
+    public SellOrder(Stock stock, int quantity, String buyerName, int unitPrice) {
+        super(stock, quantity, buyerName);
         this.unitPrice = unitPrice;
     }
 

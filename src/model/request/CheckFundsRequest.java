@@ -1,7 +1,5 @@
 package model.request;
 
-import jade.core.AID;
-
 public class CheckFundsRequest {
 
     public final String accountName;

@@ -2,7 +2,6 @@ package controller.manager;
 
 import agent.BankAgent;
 import agent.util.AgentUtil;
-import jade.core.AID;
 import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -10,15 +9,11 @@ import jade.core.behaviours.CyclicBehaviour;
 import model.Ontology;
 import model.order.BuyOrder;
 import model.order.SellOrder;
-import model.request.BlockFundsRequest;
 import model.request.CommitTransactionRequest;
 import model.transaction.Transaction;
 
 import java.util.List;
 
-/**
- * Created by Marcin on 06.06.2017.
- */
 public class TransactionManager extends CyclicBehaviour {
 
     private Agent agent;
@@ -45,8 +40,8 @@ public class TransactionManager extends CyclicBehaviour {
                     if(buyOrder.getStock().equals(sellOrder.getStock()) && buyOrder.getUnitPrice() >= sellOrder.getUnitPrice()) {
                         int transactionQuantity = buyOrder.getQuantity() > sellOrder.getQuantity() ? buyOrder.getQuantity() : sellOrder.getQuantity();
                         int transactionUnitPrice = sellOrder.getUnitPrice();
-                        transactions.add(new Transaction(buyOrder.getPlayerAID(),
-                                                         sellOrder.getPlayerAID(),
+                        transactions.add(new Transaction(buyOrder.getPlayerName(),
+                                                         sellOrder.getPlayerName(),
                                                          buyOrder.getStock(),
                                                          transactionQuantity,
                                                          transactionUnitPrice
@@ -55,7 +50,7 @@ public class TransactionManager extends CyclicBehaviour {
                         sellOrder.setQuantity(sellOrder.getQuantity()-transactionQuantity);
                         if(buyOrder.getQuantity()==0) buyOrders.remove(buyOrder);
                         if(sellOrder.getQuantity()==0) sellOrders.remove(sellOrder);
-                        CommitTransactionRequest commitTransactionRequest = new CommitTransactionRequest(buyOrder.getPlayerAID().getName(), transactionUnitPrice*transactionQuantity);
+                        CommitTransactionRequest commitTransactionRequest = new CommitTransactionRequest(buyOrder.getPlayerName(), transactionUnitPrice*transactionQuantity);
                         agent.send(AgentUtil.createMessage(agent.getAID(), commitTransactionRequest, ACLMessage.REQUEST, Ontology.COMMIT_TRANSACTION, BankAgent.aid));
                         //TODO calculate price
                         break buyOrderLoop;
