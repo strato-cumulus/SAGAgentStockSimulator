@@ -23,6 +23,9 @@ import resource.data.ShareCreator;
 import java.util.*;
 
 public class BrokerAgent extends Agent {
+
+    public static final AID aid = new AID("broker-0", AID.ISLOCALNAME);
+
     private ShareCreator shareCreator;
     private int gameDuration;
     private Map<Stock, List<Share>> portfolio;

@@ -23,8 +23,8 @@ public class PlayerAgent extends Agent {
     @Override
     protected void setup() {
         super.setup();
-        bankAID = new AID("bank-0", AID.ISLOCALNAME);
-        brokerAID = new AID("broker-0", AID.ISLOCALNAME);
+        bankAID = BankAgent.aid;
+        brokerAID = BrokerAgent.aid;
         strategy = Strategy.fromString((String) getArguments()[0]);
         addBehaviour(new OneShotBehaviour() {
             @Override

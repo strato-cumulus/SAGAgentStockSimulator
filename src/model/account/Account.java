@@ -7,7 +7,8 @@ import java.util.*;
 
 public class Account {
 
-    protected long funds = 0;
+    protected int funds = 0;
+    protected int clear = 0;
     protected Map<Stock, Set<Share>> sharesPerStock = new HashMap<>();
 
     public Account() {
@@ -15,14 +16,37 @@ public class Account {
 
     public Account(int funds) {
         this.funds = funds;
+        this.clear = funds;
     }
 
-    public long getFunds() {
+    public boolean blockFunds(int amount) {
+        if(amount > clear) return false;
+        clear -= amount;
+        return true;
+    }
+
+    public void unblockFunds(int amount) {
+        clear += amount;
+    }
+
+    public void subtract(int amount) {
+        funds -= amount;
+    }
+
+    public int getFunds() {
         return this.funds;
     }
 
-    public void setFunds(long funds) {
+    public void setFunds(int funds) {
         this.funds = funds;
+    }
+
+    public int getClear() {
+        return clear;
+    }
+
+    public void setClear(int clear) {
+        this.clear = clear;
     }
 
     public int getShareAmount(Stock stock) {
