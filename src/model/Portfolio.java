@@ -1,7 +1,6 @@
 package model;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 public class Portfolio {
 
@@ -39,6 +38,14 @@ public class Portfolio {
         this.prices.clear();
         this.amounts.putAll(portfolio.amounts);
         this.prices.putAll(portfolio.prices);
+    }
+
+    public List<String> getListOfIndexes() {
+        Map <String, Boolean> distinctIndexes = new HashMap<>();
+        for (Stock stock : amounts.keySet()) {
+            distinctIndexes.put(stock.getTickerCode(), true);
+        }
+        return new LinkedList<>(distinctIndexes.keySet());
     }
 
 }

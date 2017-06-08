@@ -1,6 +1,5 @@
 package model.order;
 
-import jade.core.AID;
 import model.Stock;
 
 public abstract class Order {

@@ -1,6 +1,5 @@
 package model.transaction;
 
-import jade.core.AID;
 import model.Stock;
 
 public class Transaction {

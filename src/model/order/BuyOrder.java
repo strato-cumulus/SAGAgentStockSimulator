@@ -1,6 +1,5 @@
 package model.order;
 
-import jade.core.AID;
 import model.Stock;
 
 public class BuyOrder extends Order {

@@ -32,10 +32,10 @@ public class BrokerAgent extends Agent {
     private ShareCreator shareCreator;
     private int gameDuration;
     private Portfolio portfolio;
+    private List<String> indexesList;
     private Map<AID, Account> players;
 
     private MessageTemplate portfolioTemplate = MessageTemplate.MatchOntology("portfolio");
-    private MessageTemplate evaluate = MessageTemplate.MatchOntology("evaluate");
     private MessageTemplate buyTemplate = MessageTemplate.MatchOntology("buy");
     private MessageTemplate sellTemplate = MessageTemplate.MatchOntology("sell");
     private MessageTemplate blockTemplate = MessageTemplate.MatchOntology(Ontology.BLOCK_FUNDS);
@@ -60,7 +60,7 @@ public class BrokerAgent extends Agent {
         //initializeShares();
 
         // add Transaction Manager
-        addBehaviour(new TransactionManager(this, sellOrders, buyOrders));
+        addBehaviour(new TransactionManager(this, sellOrders, buyOrders, indexesList));
 
         //Portfolio
         addBehaviour(new TickerBehaviour(this, 10) {
@@ -156,6 +156,7 @@ public class BrokerAgent extends Agent {
         try {
             shareCreator = new FileShareCreator("src/shares.properties");
             portfolio = shareCreator.createShares();
+            indexesList = portfolio.getListOfIndexes();
         } catch (ResourceCreationException e) {
             e.printStackTrace();
         }
