@@ -11,12 +11,16 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import model.Ontology;
 import model.Portfolio;
+import model.account.Account;
 import model.math.Line;
 import model.math.Point;
 import model.order.BuyOrder;
 import model.order.SellOrder;
 import model.request.BlockFundsRequest;
 import model.request.EquilibriumRequest;
+import model.messagecontent.Information;
+import model.request.InformationRequest;
+import model.request.PortfolioRequest;
 import resource.ResourceCreationException;
 import resource.data.FileShareCreator;
 import resource.data.ShareCreator;
@@ -25,11 +29,16 @@ import java.util.*;
 
 public class BrokerAgent extends Agent {
 
+    public static final String SHARE_PATH = "C:\\Users\\filip\\Documents\\GitHub\\SAGAgentStockSimulator\\src\\shares.properties";
     public static final AID aid = new AID("broker-0", AID.ISLOCALNAME);
 
     private ShareCreator shareCreator;
     private int gameDuration;
     private Portfolio portfolio;
+    private List<String> indexesList;
+    private Map<AID, Account> players = new HashMap<AID, Account>();
+    private List<Information> informationList = new ArrayList<>();
+    private Map<String, Integer> equilibriumPrice = new HashMap<String, Integer>();
     private EquilibriumRequest equilibrium;
 
     private MessageTemplate equilibriumTemplate = MessageTemplate.MatchOntology(Ontology.EQUILIBRIUM_REQUEST);
@@ -37,6 +46,7 @@ public class BrokerAgent extends Agent {
     private MessageTemplate buyTemplate = MessageTemplate.MatchOntology(Ontology.BUY_ORDER);
     private MessageTemplate sellTemplate = MessageTemplate.MatchOntology(Ontology.SELL_ORDER);
     private MessageTemplate blockTemplate = MessageTemplate.MatchOntology(Ontology.BLOCK_FUNDS);
+    private MessageTemplate infoTemplate = MessageTemplate.MatchOntology(Ontology.INFORMATION);
 
     private List<SellOrder> sellOrders;
     private List<BuyOrder> buyOrders = new LinkedList<>();
@@ -145,6 +155,25 @@ public class BrokerAgent extends Agent {
             }
         });
 
+        addBehaviour(new Behaviour() {
+            @Override
+            public void action() {
+                ACLMessage message = receive(infoTemplate);
+                if(message == null) {
+                    block();
+                }
+                else {
+                    InformationRequest request = gson.fromJson(message.getContent(), InformationRequest.class);
+                    informationList.addAll(request.information);
+                }
+            }
+
+            @Override
+            public boolean done() {
+                return false;
+            }
+        });
+
         addBehaviour(new TickerBehaviour(this, 500) {
             @Override
             protected void onTick() {
@@ -159,7 +188,7 @@ public class BrokerAgent extends Agent {
 
     protected void initializeShares() {
         try {
-            shareCreator = new FileShareCreator("C:\\Users\\filip\\Documents\\GitHub\\SAGAgentStockSimulator\\src\\shares.properties");
+            shareCreator = new FileShareCreator(SHARE_PATH);
             shareCreator.initializeShares();
             equilibrium = shareCreator.getInitialEquilibriumPrices();
             sellOrders = shareCreator.getInitialSellOrders();

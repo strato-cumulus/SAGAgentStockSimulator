@@ -8,14 +8,12 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 public final class FileShareCreator extends ShareCreator {
 
     private final String file;
+    private final List<String> allStocks = new ArrayList<>();
     private final EquilibriumRequest initialPrices = new EquilibriumRequest();
     private final List<SellOrder> initialSellOrders = new LinkedList<>();
 
@@ -33,6 +31,7 @@ public final class FileShareCreator extends ShareCreator {
             throw new ResourceCreationException((e instanceof FileNotFoundException)?"File not found":"Malformed input");
         }
         Set<String> tickerCodes = fileStockDefinitions.stringPropertyNames();
+        allStocks.addAll(tickerCodes);
         for(String tickerCode: tickerCodes) {
             String[] shareData = fileStockDefinitions.getProperty(tickerCode).split(";");
             try {
@@ -55,5 +54,10 @@ public final class FileShareCreator extends ShareCreator {
     @Override
     public List<SellOrder> getInitialSellOrders() {
         return this.initialSellOrders;
+    }
+
+    @Override
+    public List<String> getAllStocks() {
+        return allStocks;
     }
 }

@@ -1,20 +1,42 @@
 package strategy;
 
-import jade.core.AID;
-import model.order.BuyOrder;
-import model.request.PortfolioRequest;
-
-import java.util.List;
-import java.util.Map;
+import com.google.gson.Gson;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
+import model.Ontology;
+import model.order.Order;
+import model.request.EquilibriumRequest;
 
 public abstract class Strategy {
 
+    protected static final double maxPartSpent = .1;
+    private MessageTemplate strategyMessageTemplate = MessageTemplate.MatchOntology(Ontology.EQUILIBRIUM_REQUEST);
+    private Gson gson = new Gson();
+
     public static Strategy fromString(String strategyName) {
         switch(strategyName) {
-            case "CheapestBuy": return new CheapestBuyStrategy();
+            case "CheapestBuy": return new OnFallBuying();
+            case "InformationResponding": return new InformationResponding();
+            case "OnFallBuying": return new OnFallBuying();
+            case "OnRiseBuying": return new OnRiseBuying();
         }
         return null;
     }
 
-    public abstract Map<AID, List<BuyOrder>> perform(int funds, Map<AID, PortfolioRequest> playerPortfolios);
+    public MessageTemplate getMessageTemplate() {
+        return strategyMessageTemplate;
+    }
+
+    public ACLMessage createDataRequest() {
+        ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+        message.setOntology(Ontology.EQUILIBRIUM_REQUEST);
+        message.setContent(gson.toJson(new EquilibriumRequest()));
+        return message;
+    }
+
+    public abstract Order perform(ACLMessage message, int funds);
+
+    protected EquilibriumRequest unpack(ACLMessage message) {
+        return gson.fromJson(message.getContent(), EquilibriumRequest.class);
+    }
 }
