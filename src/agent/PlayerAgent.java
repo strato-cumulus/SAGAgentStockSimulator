@@ -59,7 +59,6 @@ public class PlayerAgent extends Agent {
                         if(response == null) block();
                         else {
                             EquilibriumRequest equilibriumResponse = gson.fromJson(response.getContent(), EquilibriumRequest.class);
-                            System.out.println(equilibriumResponse.equilibriumPrice );
                             //calculate best offer
                             readyToTrade = true;
                             done = true;

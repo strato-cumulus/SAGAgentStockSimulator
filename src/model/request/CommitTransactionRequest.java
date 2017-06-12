@@ -1,7 +1,5 @@
 package model.request;
 
-import jade.core.AID;
-
 public class CommitTransactionRequest {
 
     public final String agentName;

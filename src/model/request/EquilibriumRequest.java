@@ -11,6 +11,8 @@ public class EquilibriumRequest {
     public void addHistoricalPrices(Map<String, Integer> prices) {
         for(String stock: prices.keySet()) {
             LinkedList<Integer> historicalPricesList =  this.historicalEquilibriumPrice.get(stock);
+            if(historicalPricesList == null)
+                historicalPricesList = new LinkedList<Integer>();
             historicalPricesList.add(prices.get(stock));
             this.historicalEquilibriumPrice.put(stock, historicalPricesList);
         }

@@ -1,12 +1,3 @@
-import jade.Boot;
-import model.logger.Logger;
-import model.math.Line;
-import model.math.Point;
-
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-
 public class SagMain {
     public static void main(String[] args){
 //        String[] param = new String[ 5 ];

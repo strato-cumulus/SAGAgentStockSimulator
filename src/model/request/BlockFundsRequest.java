@@ -1,7 +1,5 @@
 package model.request;
 
-import jade.core.AID;
-
 public class BlockFundsRequest {
 
     public final String agentName;
