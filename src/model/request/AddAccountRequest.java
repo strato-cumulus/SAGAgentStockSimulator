@@ -1,7 +1,5 @@
 package model.request;
 
-import jade.core.AID;
-
 public class AddAccountRequest {
 
     public final String agentName;

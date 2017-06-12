@@ -12,16 +12,12 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import model.Ontology;
 import model.order.BuyOrder;
-import model.order.Order;
 import model.order.SellOrder;
 import model.request.AddAccountRequest;
 import model.request.EquilibriumRequest;
 import model.request.ShowFundsRequest;
 import model.request.TradeRequest;
 import strategy.Strategy;
-
-import java.util.List;
-import java.util.Map;
 
 public class PlayerAgent extends Agent {
 
@@ -64,7 +60,6 @@ public class PlayerAgent extends Agent {
                         if(response == null) block();
                         else {
                             EquilibriumRequest equilibriumResponse = gson.fromJson(response.getContent(), EquilibriumRequest.class);
-                            System.out.println(equilibriumResponse.equilibriumPrice );
                             //calculate best offer
                             readyToTrade = true;
                             done = true;
