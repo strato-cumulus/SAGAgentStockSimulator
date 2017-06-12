@@ -1,6 +1,11 @@
 import jade.Boot;
+import model.logger.Logger;
 import model.math.Line;
 import model.math.Point;
+
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 public class SagMain {
     public static void main(String[] args){
@@ -13,17 +18,5 @@ public class SagMain {
 //
 //        Boot.main( param );
 //
-
-
-
-        Line LA = Line.getLineFromPoints(new Point(2.0, 2.0 ), new Point(-2.0, -2.0));
-        Line LB = Line.getLineFromPoints(new Point(1.0, 0.0 ), new Point(0.0, 1.0));
-
-        //Line LA = new Line (1.0, 0.0);
-        //Line LB = new Line (-1.0, 0.0);
-
-        Point inter = LA.getIntersection(LB);
-        System.out.println("x: " + inter.getX());
-        System.out.println("y: " + inter.getY());
     }
 }
