@@ -17,7 +17,6 @@ import model.order.BuyOrder;
 import model.order.SellOrder;
 import model.request.BlockFundsRequest;
 import model.request.EquilibriumRequest;
-import model.request.PortfolioRequest;
 import resource.ResourceCreationException;
 import resource.data.FileShareCreator;
 import resource.data.ShareCreator;
@@ -31,7 +30,7 @@ public class BrokerAgent extends Agent {
     private ShareCreator shareCreator;
     private int gameDuration;
     private Portfolio portfolio;
-    private EquilibriumRequest equilibrium = new EquilibriumRequest();
+    private EquilibriumRequest equilibrium;
 
     private MessageTemplate equilibriumTemplate = MessageTemplate.MatchOntology(Ontology.EQUILIBRIUM_REQUEST);
     private MessageTemplate portfolioTemplate = MessageTemplate.MatchOntology(Ontology.PORTFOLIO_REQUEST);
@@ -39,7 +38,7 @@ public class BrokerAgent extends Agent {
     private MessageTemplate sellTemplate = MessageTemplate.MatchOntology(Ontology.SELL_ORDER);
     private MessageTemplate blockTemplate = MessageTemplate.MatchOntology(Ontology.BLOCK_FUNDS);
 
-    private List<SellOrder> sellOrders = new LinkedList<>();
+    private List<SellOrder> sellOrders;
     private List<BuyOrder> buyOrders = new LinkedList<>();
 
     private Gson gson = new Gson();
@@ -61,7 +60,7 @@ public class BrokerAgent extends Agent {
         addBehaviour(new TransactionManager(this, sellOrders, buyOrders, equilibrium));
 
         //EquilibriumRequest
-        addBehaviour(new TickerBehaviour(this, 10) {
+        addBehaviour(new TickerBehaviour(this, 100) {
             private EquilibriumRequest equilibriumRequest;
             private AID senderAID;
             @Override
@@ -73,27 +72,6 @@ public class BrokerAgent extends Agent {
                 else {
                     senderAID = message.getSender();
                     send(AgentUtil.createMessage(getAID(), equilibrium, ACLMessage.REQUEST, Ontology.EQUILIBRIUM_REQUEST, senderAID));
-                    if (getTickCount() > 100) {
-                        stop();
-                    }
-                }
-            }
-        });
-        //Portfolio
-        addBehaviour(new TickerBehaviour(this, 10) {
-            private PortfolioRequest portfolioRequest;
-            private AID senderAID;
-            @Override
-            public void onTick() {
-                ACLMessage message = receive(portfolioTemplate);
-                if(message == null) {
-                    block();
-                }
-                else {
-                    portfolioRequest = gson.fromJson(message.getContent(), PortfolioRequest.class);
-                    senderAID = message.getSender();
-                    portfolioRequest.portfolio.copy(portfolio);
-                    send(AgentUtil.createMessage(getAID(), portfolioRequest, ACLMessage.REQUEST, Ontology.PORTFOLIO_REQUEST, senderAID));
                     if (getTickCount() > 100) {
                         stop();
                     }
@@ -182,8 +160,9 @@ public class BrokerAgent extends Agent {
     protected void initializeShares() {
         try {
             shareCreator = new FileShareCreator("C:\\Users\\filip\\Documents\\GitHub\\SAGAgentStockSimulator\\src\\shares.properties");
-            portfolio = shareCreator.createShares();
-            equilibrium.equilibriumPrice.putAll(portfolio.getInitialEquilibriumPrice());
+            shareCreator.initializeShares();
+            equilibrium = shareCreator.getInitialEquilibriumPrices();
+            sellOrders = shareCreator.getInitialSellOrders();
         } catch (ResourceCreationException e) {
             e.printStackTrace();
         }

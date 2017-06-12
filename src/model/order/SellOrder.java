@@ -6,8 +6,8 @@ public class SellOrder extends Order {
 
     public final long unitPrice;
 
-    public SellOrder(String stock, int quantity, String buyerName, int unitPrice) {
-        super(stock, quantity, buyerName);
+    public SellOrder(String stock, int quantity, String sellerName, int unitPrice) {
+        super(stock, quantity, sellerName);
         this.unitPrice = unitPrice;
     }
 

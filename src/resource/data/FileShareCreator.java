@@ -1,25 +1,30 @@
 package resource.data;
 
-import model.Portfolio;
+import model.order.SellOrder;
+import model.request.EquilibriumRequest;
 import resource.ResourceCreationException;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
 public final class FileShareCreator extends ShareCreator {
 
     private final String file;
+    private final EquilibriumRequest initialPrices = new EquilibriumRequest();
+    private final List<SellOrder> initialSellOrders = new LinkedList<>();
 
     public FileShareCreator(String file) throws ResourceCreationException {
         this.file = file;
     }
 
     @Override
-    public Portfolio createShares() throws ResourceCreationException {
+    public void initializeShares() throws ResourceCreationException {
         Properties fileStockDefinitions = new Properties();
         try {
             fileStockDefinitions.load(new InputStreamReader(new FileInputStream(file)));
@@ -28,18 +33,27 @@ public final class FileShareCreator extends ShareCreator {
             throw new ResourceCreationException((e instanceof FileNotFoundException)?"File not found":"Malformed input");
         }
         Set<String> tickerCodes = fileStockDefinitions.stringPropertyNames();
-        Portfolio portfolio = new Portfolio();
         for(String tickerCode: tickerCodes) {
             String[] shareData = fileStockDefinitions.getProperty(tickerCode).split(";");
             try {
                 int amount = Integer.parseInt(shareData[0]);
                 int price = Integer.parseInt(shareData[1]);
-                portfolio.addStock(tickerCode, amount, price);
+                initialPrices.equilibriumPrice.put(tickerCode, price);
+                initialSellOrders.add(new SellOrder(tickerCode, amount, new String("broker-0"), price));
             }
             catch(NumberFormatException | ArrayIndexOutOfBoundsException e) {
                 throw new ResourceCreationException("Malformed input");
             }
         }
-        return portfolio;
+    }
+
+    @Override
+    public EquilibriumRequest getInitialEquilibriumPrices() {
+        return this.initialPrices;
+    }
+
+    @Override
+    public List<SellOrder> getInitialSellOrders() {
+        return this.initialSellOrders;
     }
 }
