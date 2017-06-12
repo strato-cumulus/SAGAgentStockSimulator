@@ -3,12 +3,12 @@ package controller.manager;
 import agent.BankAgent;
 import agent.util.AgentUtil;
 import jade.core.Agent;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import jade.core.behaviours.CyclicBehaviour;
+import model.Ontology;
 import model.math.Line;
 import model.math.Point;
-import model.Ontology;
 import model.order.BuyOrder;
 import model.order.SellOrder;
 import model.request.CommitTransactionRequest;
@@ -23,14 +23,14 @@ public class TransactionManager extends CyclicBehaviour {
     private List<SellOrder> sellOrders;
     private List<BuyOrder> buyOrders;
     private List<Transaction> transactions;
-    private List<String> indexesList;
+    private Map<String, Integer> equilibriumPrice;
     private MessageTemplate evalTemplate = MessageTemplate.MatchOntology(Ontology.EVALUATE);
 
-    public TransactionManager (Agent agent, List<SellOrder> sellOrders, List<BuyOrder> buyOrders, List<String> indexesList) {
+    public TransactionManager (Agent agent, List<SellOrder> sellOrders, List<BuyOrder> buyOrders, Map<String, Integer> equilibriumPrice) {
         this.agent = agent;
         this.sellOrders = sellOrders;
         this.buyOrders = buyOrders;
-        this.indexesList = indexesList;
+        this.equilibriumPrice = equilibriumPrice;
     }
 
     @Override
@@ -54,8 +54,8 @@ public class TransactionManager extends CyclicBehaviour {
                         agent.send(AgentUtil.createMessage(agent.getAID(), commitTransactionRequest, ACLMessage.REQUEST, Ontology.COMMIT_TRANSACTION, BankAgent.aid));
 
                         //TODO calculate price - coś sprytniejszego trzeba - liczenie co jakiś odstęp czasu? Żeby łatwiejsza analiza była?
-                        for (String tickerCode : indexesList) {
-                            getEquilibriumPrice(tickerCode);
+                        for (String stock : equilibriumPrice.keySet()) {
+                            equilibriumPrice.put(stock, getEquilibriumPrice(stock));
                         }
                         break buyOrderLoop;
                     }
@@ -78,7 +78,7 @@ public class TransactionManager extends CyclicBehaviour {
 
         for(BuyOrder buyOrder : buyOrders) {
             Integer value;
-            if(buyOrder.getStock().getTickerCode() == tickerCode) {
+            if(buyOrder.getStock() == tickerCode) {
                 value = buyOrdersMap.putIfAbsent(buyOrder.getTotalPrice(), buyOrder.getQuantity());
                 if (value != null) {
                     buyOrdersMap.put(buyOrder.getTotalPrice(), value + buyOrder.getQuantity());
@@ -88,7 +88,7 @@ public class TransactionManager extends CyclicBehaviour {
 
         for(SellOrder sellOrder : sellOrders) {
             Integer value;
-            if(sellOrder.getStock().getTickerCode() == tickerCode) {
+            if(sellOrder.getStock() == tickerCode) {
                 value = sellOrdersMap.putIfAbsent(sellOrder.getTotalPrice(), sellOrder.getQuantity());
                 if (value != null) {
                     sellOrdersMap.put(sellOrder.getTotalPrice(), value + sellOrder.getQuantity());

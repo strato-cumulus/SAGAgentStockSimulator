@@ -1,15 +1,12 @@
 package model.order;
 
-import jade.core.AID;
-import model.Stock;
-
 import java.util.Comparator;
 
 public class SellOrder extends Order {
 
     public final long unitPrice;
 
-    public SellOrder(Stock stock, int quantity, String buyerName, int unitPrice) {
+    public SellOrder(String stock, int quantity, String buyerName, int unitPrice) {
         super(stock, quantity, buyerName);
         this.unitPrice = unitPrice;
     }

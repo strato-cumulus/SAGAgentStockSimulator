@@ -1,15 +1,13 @@
 package model.transaction;
 
-import model.Stock;
-
 public class Transaction {
     private String buyerName;
     private String sellerName;
-    private Stock stock;
+    private String stock;
     private int transactionQuantity;
     private int transactionPrice;
 
-    public Transaction(String buyerAID, String sellerName, Stock stock, int transactionQuantity, int transactionPrice) {
+    public Transaction(String buyerAID, String sellerName, String stock, int transactionQuantity, int transactionPrice) {
         this.buyerName = buyerName;
         this.sellerName = sellerName;
         this.stock = stock;
@@ -34,11 +32,11 @@ public class Transaction {
         this.sellerName = sellerName;
     }
 
-    public Stock getStock() {
+    public String getStock() {
         return stock;
     }
 
-    public void setStock(Stock stock) {
+    public void setStock(String stock) {
         this.stock = stock;
     }
 

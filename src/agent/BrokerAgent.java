@@ -11,18 +11,14 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import model.Ontology;
 import model.Portfolio;
-import model.Stock;
-import model.account.Account;
 import model.order.BuyOrder;
 import model.order.SellOrder;
 import model.request.BlockFundsRequest;
 import model.request.EquilibriumRequest;
 import model.request.PortfolioRequest;
-import model.request.SellOrdersRequest;
 import resource.ResourceCreationException;
 import resource.data.FileShareCreator;
 import resource.data.ShareCreator;
-import sun.awt.EventQueueItem;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -36,8 +32,7 @@ public class BrokerAgent extends Agent {
     private ShareCreator shareCreator;
     private int gameDuration;
     private Portfolio portfolio;
-    private List<String> indexesList;
-    private Map<AID, Account> players = new HashMap<AID, Account>();
+    private Map<String, Integer> equilibriumPrice = new HashMap<String, Integer>();
 
     private MessageTemplate equilibriumTemplate = MessageTemplate.MatchOntology(Ontology.EQUILIBRIUM_REQUEST);
     private MessageTemplate portfolioTemplate = MessageTemplate.MatchOntology(Ontology.PORTFOLIO_REQUEST);
@@ -64,9 +59,9 @@ public class BrokerAgent extends Agent {
         initializeShares();
 
         // add Transaction Manager
-        addBehaviour(new TransactionManager(this, sellOrders, buyOrders, indexesList));
+        addBehaviour(new TransactionManager(this, sellOrders, buyOrders, equilibriumPrice));
 
-        //SellOrdersRequest
+        //EquilibriumRequest
         addBehaviour(new TickerBehaviour(this, 10) {
             private EquilibriumRequest equilibriumRequest;
             private AID senderAID;
@@ -78,9 +73,10 @@ public class BrokerAgent extends Agent {
                 }
                 else {
                     equilibriumRequest = gson.fromJson(message.getContent(), EquilibriumRequest.class);
+                    equilibriumRequest.equilibriumPrice.clear();
+                    equilibriumRequest.equilibriumPrice.putAll(equilibriumPrice);
                     senderAID = message.getSender();
                     send(AgentUtil.createMessage(getAID(), equilibriumRequest, ACLMessage.REQUEST, Ontology.EQUILIBRIUM_REQUEST, senderAID));
-                    players.putIfAbsent(senderAID, new Account());
                     if (getTickCount() > 100) {
                         stop();
                     }
@@ -102,7 +98,6 @@ public class BrokerAgent extends Agent {
                     senderAID = message.getSender();
                     portfolioRequest.portfolio.copy(portfolio);
                     send(AgentUtil.createMessage(getAID(), portfolioRequest, ACLMessage.REQUEST, Ontology.PORTFOLIO_REQUEST, senderAID));
-                    players.putIfAbsent(senderAID, new Account());
                     if (getTickCount() > 100) {
                         stop();
                     }
@@ -181,7 +176,7 @@ public class BrokerAgent extends Agent {
         try {
             shareCreator = new FileShareCreator("C:\\Users\\filip\\Documents\\GitHub\\SAGAgentStockSimulator\\src\\shares.properties");
             portfolio = shareCreator.createShares();
-            indexesList = portfolio.getListOfIndexes();
+            equilibriumPrice = portfolio.getInitialEquilibriumPrice();
         } catch (ResourceCreationException e) {
             e.printStackTrace();
         }

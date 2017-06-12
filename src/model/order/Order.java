@@ -1,21 +1,19 @@
 package model.order;
 
-import model.Stock;
-
 public abstract class Order {
 
-    protected final Stock stock;
+    protected final String stock;
     private int quantity;
     private int unitPrice;
     private final String playerName;
 
-    public Order(Stock stock, int quantity, String playerName) {
+    public Order(String stock, int quantity, String playerName) {
         this.stock = stock;
         this.quantity = quantity;
         this.playerName = playerName;
     }
 
-    public Stock getStock() {
+    public String getStock() {
         return stock;
     }
 

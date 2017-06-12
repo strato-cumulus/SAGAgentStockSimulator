@@ -1,14 +1,14 @@
 package resource.data;
 
 import model.Portfolio;
-import model.Stock;
 import resource.ResourceCreationException;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.*;
+import java.util.Properties;
+import java.util.Set;
 
 public final class FileShareCreator extends ShareCreator {
 
@@ -34,8 +34,7 @@ public final class FileShareCreator extends ShareCreator {
             try {
                 int amount = Integer.parseInt(shareData[0]);
                 int price = Integer.parseInt(shareData[1]);
-                Stock stock = new Stock(tickerCode);
-                portfolio.addStock(stock, amount, price);
+                portfolio.addStock(tickerCode, amount, price);
             }
             catch(NumberFormatException | ArrayIndexOutOfBoundsException e) {
                 throw new ResourceCreationException("Malformed input");

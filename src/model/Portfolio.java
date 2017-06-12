@@ -4,23 +4,23 @@ import java.util.*;
 
 public class Portfolio {
 
-    private final Map<Stock, Integer> amounts = new LinkedHashMap<>();
-    private final Map<Stock, Integer> prices = new LinkedHashMap<>();
+    private final Map<String, Integer> amounts = new LinkedHashMap<>();
+    private final Map<String, Integer> prices = new LinkedHashMap<>();
 
-    public void addStock(Stock stock, int amount, int price) {
+    public void addStock(String stock, int amount, int price) {
         this.amounts.put(stock, amount);
         this.prices.put(stock, price);
     }
 
-    public Integer getAmount(Stock stock) {
+    public Integer getAmount(String stock) {
         return amounts.get(stock);
     }
 
-    public Integer getPrice(Stock stock) {
+    public Integer getPrice(String stock) {
         return prices.get(stock);
     }
 
-    public boolean changeAmount(Stock stock, int delta) {
+    public boolean changeAmount(String stock, int delta) {
         if(amounts.get(stock) + delta < 0) {
             return false;
         }
@@ -42,16 +42,20 @@ public class Portfolio {
 
     public List<String> getListOfIndexes() {
         Map <String, Boolean> distinctIndexes = new HashMap<>();
-        for (Stock stock : amounts.keySet()) {
-            distinctIndexes.put(stock.getTickerCode(), true);
+        for (String stock : amounts.keySet()) {
+            distinctIndexes.put(stock, true);
         }
         return new LinkedList<>(distinctIndexes.keySet());
     }
 
+    public Map<String, Integer> getInitialEquilibriumPrice() {
+        return this.prices;
+    }
+
     public String toString() {
         StringBuilder sb = new StringBuilder("Portfolio: \n");
-        for (Stock stock : amounts.keySet()) {
-            sb.append("Stock: " + stock.getTickerCode() + " amount: " + amounts.get(stock).toString() + " price: " + prices.get(stock).toString() + "\n");
+        for (String stock : amounts.keySet()) {
+            sb.append("Stock: " + stock + " amount: " + amounts.get(stock).toString() + " price: " + prices.get(stock).toString() + "\n");
         }
         return sb.toString();
     }

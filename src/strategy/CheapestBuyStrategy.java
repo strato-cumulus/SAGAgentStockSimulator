@@ -3,12 +3,10 @@ package strategy;
 import jade.core.AID;
 import javafx.util.Pair;
 import model.Portfolio;
-import model.Stock;
 import model.order.BuyOrder;
 import model.request.PortfolioRequest;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class CheapestBuyStrategy extends Strategy {
 
@@ -31,7 +29,7 @@ public class CheapestBuyStrategy extends Strategy {
         Map<AID, List<BuyOrder>> buyOrders = new HashMap<>();
         for(Map.Entry<AID, Portfolio> shareEntry: boughtShares.entrySet()) {
             Portfolio shares = shareEntry.getValue();
-            Map<Stock, Portfolio> sharesPerStock = new HashMap<>();
+            Map<String, Portfolio> sharesPerStock = new HashMap<>();
             //
         }
         return buyOrders;
