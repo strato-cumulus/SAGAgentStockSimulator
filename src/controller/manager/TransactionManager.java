@@ -12,6 +12,7 @@ import model.math.Point;
 import model.order.BuyOrder;
 import model.order.SellOrder;
 import model.request.CommitTransactionRequest;
+import model.request.EquilibriumRequest;
 import model.transaction.Transaction;
 
 import java.util.*;
@@ -23,14 +24,14 @@ public class TransactionManager extends CyclicBehaviour {
     private List<SellOrder> sellOrders;
     private List<BuyOrder> buyOrders;
     private List<Transaction> transactions;
-    private Map<String, Integer> equilibriumPrice;
+    private EquilibriumRequest equilibrium;
     private MessageTemplate evalTemplate = MessageTemplate.MatchOntology(Ontology.EVALUATE);
 
-    public TransactionManager (Agent agent, List<SellOrder> sellOrders, List<BuyOrder> buyOrders, Map<String, Integer> equilibriumPrice) {
+    public TransactionManager (Agent agent, List<SellOrder> sellOrders, List<BuyOrder> buyOrders, EquilibriumRequest equilibrium) {
         this.agent = agent;
         this.sellOrders = sellOrders;
         this.buyOrders = buyOrders;
-        this.equilibriumPrice = equilibriumPrice;
+        this.equilibrium = equilibrium;
     }
 
     @Override
@@ -54,9 +55,11 @@ public class TransactionManager extends CyclicBehaviour {
                         agent.send(AgentUtil.createMessage(agent.getAID(), commitTransactionRequest, ACLMessage.REQUEST, Ontology.COMMIT_TRANSACTION, BankAgent.aid));
 
                         //TODO calculate price - coś sprytniejszego trzeba - liczenie co jakiś odstęp czasu? Żeby łatwiejsza analiza była?
-                        for (String stock : equilibriumPrice.keySet()) {
-                            equilibriumPrice.put(stock, getEquilibriumPrice(stock));
+                        Map<String, Integer> newPrices = new HashMap<String, Integer>();
+                        for (String stock : equilibrium.equilibriumPrice.keySet()) {
+                            newPrices.put(stock, getEquilibriumPrice(stock));
                         }
+                        equilibrium.updatePrices(newPrices);
                         break buyOrderLoop;
                     }
                 }

@@ -20,10 +20,8 @@ import resource.ResourceCreationException;
 import resource.data.FileShareCreator;
 import resource.data.ShareCreator;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 public class BrokerAgent extends Agent {
 
@@ -32,7 +30,7 @@ public class BrokerAgent extends Agent {
     private ShareCreator shareCreator;
     private int gameDuration;
     private Portfolio portfolio;
-    private Map<String, Integer> equilibriumPrice = new HashMap<String, Integer>();
+    private EquilibriumRequest equilibrium = new EquilibriumRequest();
 
     private MessageTemplate equilibriumTemplate = MessageTemplate.MatchOntology(Ontology.EQUILIBRIUM_REQUEST);
     private MessageTemplate portfolioTemplate = MessageTemplate.MatchOntology(Ontology.PORTFOLIO_REQUEST);
@@ -59,7 +57,7 @@ public class BrokerAgent extends Agent {
         initializeShares();
 
         // add Transaction Manager
-        addBehaviour(new TransactionManager(this, sellOrders, buyOrders, equilibriumPrice));
+        addBehaviour(new TransactionManager(this, sellOrders, buyOrders, equilibrium));
 
         //EquilibriumRequest
         addBehaviour(new TickerBehaviour(this, 10) {
@@ -72,11 +70,8 @@ public class BrokerAgent extends Agent {
                     block();
                 }
                 else {
-                    equilibriumRequest = gson.fromJson(message.getContent(), EquilibriumRequest.class);
-                    equilibriumRequest.equilibriumPrice.clear();
-                    equilibriumRequest.equilibriumPrice.putAll(equilibriumPrice);
                     senderAID = message.getSender();
-                    send(AgentUtil.createMessage(getAID(), equilibriumRequest, ACLMessage.REQUEST, Ontology.EQUILIBRIUM_REQUEST, senderAID));
+                    send(AgentUtil.createMessage(getAID(), equilibrium, ACLMessage.REQUEST, Ontology.EQUILIBRIUM_REQUEST, senderAID));
                     if (getTickCount() > 100) {
                         stop();
                     }
@@ -176,7 +171,7 @@ public class BrokerAgent extends Agent {
         try {
             shareCreator = new FileShareCreator("C:\\Users\\filip\\Documents\\GitHub\\SAGAgentStockSimulator\\src\\shares.properties");
             portfolio = shareCreator.createShares();
-            equilibriumPrice = portfolio.getInitialEquilibriumPrice();
+            equilibrium.equilibriumPrice.putAll(portfolio.getInitialEquilibriumPrice());
         } catch (ResourceCreationException e) {
             e.printStackTrace();
         }
