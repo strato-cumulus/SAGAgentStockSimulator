@@ -17,6 +17,7 @@ import model.order.BuyOrder;
 import model.order.SellOrder;
 import model.request.BlockFundsRequest;
 import model.request.PortfolioRequest;
+import model.request.SellOrdersRequest;
 import resource.ResourceCreationException;
 import resource.data.FileShareCreator;
 import resource.data.ShareCreator;
@@ -36,6 +37,7 @@ public class BrokerAgent extends Agent {
     private List<String> indexesList;
     private Map<AID, Account> players = new HashMap<AID, Account>();
 
+    private MessageTemplate sellOrdersRequestTemplate = MessageTemplate.MatchOntology(Ontology.SELL_ORDERS_REQUEST);
     private MessageTemplate portfolioTemplate = MessageTemplate.MatchOntology(Ontology.PORTFOLIO_REQUEST);
     private MessageTemplate buyTemplate = MessageTemplate.MatchOntology(Ontology.BUY_ORDER);
     private MessageTemplate sellTemplate = MessageTemplate.MatchOntology(Ontology.SELL_TRANSACTION);
@@ -62,6 +64,28 @@ public class BrokerAgent extends Agent {
         // add Transaction Manager
         addBehaviour(new TransactionManager(this, sellOrders, buyOrders, indexesList));
 
+        //SellOrdersRequest
+        addBehaviour(new TickerBehaviour(this, 10) {
+            private SellOrdersRequest sellOrdersRequest;
+            private AID senderAID;
+            @Override
+            public void onTick() {
+                ACLMessage message = receive(sellOrdersRequestTemplate);
+                if(message == null) {
+                    block();
+                }
+                else {
+                    sellOrdersRequest = gson.fromJson(message.getContent(), SellOrdersRequest.class);
+                    senderAID = message.getSender();
+                    sellOrdersRequest.sellOrders.addAll(sellOrders);
+                    send(AgentUtil.createMessage(getAID(), sellOrdersRequest, ACLMessage.REQUEST, Ontology.SELL_ORDERS_REQUEST, senderAID));
+                    players.putIfAbsent(senderAID, new Account());
+                    if (getTickCount() > 100) {
+                        stop();
+                    }
+                }
+            }
+        });
         //Portfolio
         addBehaviour(new TickerBehaviour(this, 10) {
             private PortfolioRequest portfolioRequest;
