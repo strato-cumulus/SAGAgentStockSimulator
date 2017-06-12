@@ -12,4 +12,6 @@ public class Ontology {
     public static final String BLOCK_FUNDS = "block-funds";
     public static final String COMMIT_TRANSACTION = "commit-tx";
     public static final String EQUILIBRIUM_REQUEST = "equlibrium-request";
+    public static final String INFORMATION = "info";
 }
+

@@ -12,4 +12,5 @@ public abstract class ShareCreator {
     public abstract void initializeShares() throws ResourceCreationException;
     public abstract EquilibriumRequest getInitialEquilibriumPrices();
     public abstract List<SellOrder> getInitialSellOrders();
+    public abstract List<String> getAllStocks();
 }

@@ -12,21 +12,44 @@ $agents_array = [System.Collections.ArrayList]@()
 $min_funds = 2000
 $max_funds = 3000
 
+$game_length = 100
+
 $agents_names=@(
-    "test1",
-    "test2"
+    "CheapestBuy",
+    "InformationResponding",
+    "OnFallBuying",
+    "OnRiseBuying"
 )
 
 $agents_config=@(1,2)
 
-#strategy 1...
+#CheapestBuy
 for ( $i = 0; $i -lt $args[0]; $i++) {
 	$cash = Get-Random -minimum $min_funds -maximum $max_funds
     $agents_array.Add($agents_names[0] + "_" + $i + ":" + $player_class + "(CheapestBuy, " + $cash + ")")
 }
 
+#InformationResponding
+for ( $i = 0; $i -lt $args[0]; $i++) {
+	$cash = Get-Random -minimum $min_funds -maximum $max_funds
+    $agents_array.Add($agents_names[1] + "_" + $i + ":" + $player_class + "(InformationResponding, " + $cash + ")")
+}
+
+#OnFallBuying
+for ( $i = 0; $i -lt $args[0]; $i++) {
+	$cash = Get-Random -minimum $min_funds -maximum $max_funds
+    $agents_array.Add($agents_names[2] + "_" + $i + ":" + $player_class + "(OnFallBuying, " + $cash + ")")
+}
+
+#OnRiseBuying
+for ( $i = 0; $i -lt $args[0]; $i++) {
+	$cash = Get-Random -minimum $min_funds -maximum $max_funds
+    $agents_array.Add($agents_names[3] + "_" + $i + ":" + $player_class + "(OnRiseBuying, " + $cash + ")")
+}
+
+
 $agents_array.Add("bank-0:" + $banker_class)
-$agents_array.Add("broker-0:" + $broker_class + "(100)")
+$agents_array.Add("broker-0:" + $broker_class + "(" + $game_length + ")")
 
 $agents_list = $agents_array -Join ';' 
 
