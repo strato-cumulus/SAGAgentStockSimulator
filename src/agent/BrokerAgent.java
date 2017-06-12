@@ -150,7 +150,10 @@ public class BrokerAgent extends Agent {
             protected void onTick() {
                 Map<String, Integer> newPrices = new HashMap<String, Integer>();
                 for (String stock : equilibrium.equilibriumPrice.keySet()) {
-                    newPrices.put(stock, getEquilibriumPrice(stock));
+                    int price = getEquilibriumPrice(stock);
+                    if(price > 0) {
+                        newPrices.put(stock, getEquilibriumPrice(stock));
+                    }
                 }
                 equilibrium.updatePrices(newPrices);
             }
@@ -183,9 +186,9 @@ public class BrokerAgent extends Agent {
         for(BuyOrder buyOrder : buyOrders) {
             Integer value;
             if(buyOrder.getStock() == tickerCode) {
-                value = buyOrdersMap.putIfAbsent(buyOrder.getTotalPrice(), buyOrder.getQuantity());
+                value = buyOrdersMap.putIfAbsent(buyOrder.getUnitPrice(), buyOrder.getQuantity());
                 if (value != null) {
-                    buyOrdersMap.put(buyOrder.getTotalPrice(), value + buyOrder.getQuantity());
+                    buyOrdersMap.put(buyOrder.getUnitPrice(), value + buyOrder.getQuantity());
                 }
             }
         }
@@ -193,11 +196,31 @@ public class BrokerAgent extends Agent {
         for(SellOrder sellOrder : sellOrders) {
             Integer value;
             if(sellOrder.getStock() == tickerCode) {
-                value = sellOrdersMap.putIfAbsent(sellOrder.getTotalPrice(), sellOrder.getQuantity());
+                value = sellOrdersMap.putIfAbsent(sellOrder.getUnitPrice(), sellOrder.getQuantity());
                 if (value != null) {
-                    sellOrdersMap.put(sellOrder.getTotalPrice(), value + sellOrder.getQuantity());
+                    sellOrdersMap.put(sellOrder.getUnitPrice(), value + sellOrder.getQuantity());
                 }
             }
+        }
+
+        if(buyOrdersMap.size() == 0 && sellOrdersMap.size() == 0) {
+            return -1;
+        }
+
+        if(buyOrdersMap.size() == 0) {
+            List<Integer> multiplication = new LinkedList<>();
+            for(Integer key : sellOrdersMap.keySet()) {
+                multiplication.add(key * sellOrdersMap.get(key));
+            }
+            return  multiplication.stream().reduce(0, Integer::sum)/sellOrdersMap.values().stream().reduce(0, Integer::sum);
+        }
+
+        if(sellOrdersMap.size() == 0) {
+            List<Integer> multiplication = new LinkedList<>();
+            for(Integer key : buyOrdersMap.keySet()) {
+                multiplication.add(key * buyOrdersMap.get(key));
+            }
+            return  multiplication.stream().reduce(0, Integer::sum)/buyOrdersMap.values().stream().reduce(0, Integer::sum);
         }
 
         for(Map.Entry<Integer,Integer> entry : sellOrdersMap.entrySet()) {
