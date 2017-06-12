@@ -48,4 +48,11 @@ public class Portfolio {
         return new LinkedList<>(distinctIndexes.keySet());
     }
 
+    public String toString() {
+        StringBuilder sb = new StringBuilder("Portfolio: \n");
+        for (Stock stock : amounts.keySet()) {
+            sb.append("Stock: " + stock.getTickerCode() + " amount: " + amounts.get(stock).toString() + " price: " + prices.get(stock).toString() + "\n");
+        }
+        return sb.toString();
+    }
 }

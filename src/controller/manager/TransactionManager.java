@@ -45,12 +45,7 @@ public class TransactionManager extends CyclicBehaviour {
                     if(buyOrder.getStock().equals(sellOrder.getStock()) && buyOrder.getUnitPrice() >= sellOrder.getUnitPrice()) {
                         int transactionQuantity = buyOrder.getQuantity() > sellOrder.getQuantity() ? buyOrder.getQuantity() : sellOrder.getQuantity();
                         int transactionUnitPrice = sellOrder.getUnitPrice();
-                        transactions.add(new Transaction(buyOrder.getPlayerName(),
-                                                         sellOrder.getPlayerName(),
-                                                         buyOrder.getStock(),
-                                                         transactionQuantity,
-                                                         transactionUnitPrice
-                                                         ));
+                        transactions.add(new Transaction(buyOrder.getPlayerName(), sellOrder.getPlayerName(), buyOrder.getStock(), transactionQuantity, transactionUnitPrice ));
                         buyOrder.setQuantity(buyOrder.getQuantity()-transactionQuantity);
                         sellOrder.setQuantity(sellOrder.getQuantity()-transactionQuantity);
                         if(buyOrder.getQuantity()==0) buyOrders.remove(buyOrder);

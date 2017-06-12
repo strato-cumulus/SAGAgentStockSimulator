@@ -21,6 +21,7 @@ import resource.ResourceCreationException;
 import resource.data.FileShareCreator;
 import resource.data.ShareCreator;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -33,11 +34,11 @@ public class BrokerAgent extends Agent {
     private int gameDuration;
     private Portfolio portfolio;
     private List<String> indexesList;
-    private Map<AID, Account> players;
+    private Map<AID, Account> players = new HashMap<AID, Account>();
 
-    private MessageTemplate portfolioTemplate = MessageTemplate.MatchOntology("portfolio");
-    private MessageTemplate buyTemplate = MessageTemplate.MatchOntology("buy");
-    private MessageTemplate sellTemplate = MessageTemplate.MatchOntology("sell");
+    private MessageTemplate portfolioTemplate = MessageTemplate.MatchOntology(Ontology.PORTFOLIO_REQUEST);
+    private MessageTemplate buyTemplate = MessageTemplate.MatchOntology(Ontology.BUY_ORDER);
+    private MessageTemplate sellTemplate = MessageTemplate.MatchOntology(Ontology.SELL_TRANSACTION);
     private MessageTemplate blockTemplate = MessageTemplate.MatchOntology(Ontology.BLOCK_FUNDS);
 
     private List<SellOrder> sellOrders = new LinkedList<>();
@@ -56,8 +57,7 @@ public class BrokerAgent extends Agent {
             doDelete();
         }
 
-        //TODO nie działa
-        //initializeShares();
+        initializeShares();
 
         // add Transaction Manager
         addBehaviour(new TransactionManager(this, sellOrders, buyOrders, indexesList));
@@ -154,7 +154,7 @@ public class BrokerAgent extends Agent {
 
     protected void initializeShares() {
         try {
-            shareCreator = new FileShareCreator("src/shares.properties");
+            shareCreator = new FileShareCreator("C:\\Users\\filip\\Documents\\GitHub\\SAGAgentStockSimulator\\src\\shares.properties");
             portfolio = shareCreator.createShares();
             indexesList = portfolio.getListOfIndexes();
         } catch (ResourceCreationException e) {
@@ -162,9 +162,6 @@ public class BrokerAgent extends Agent {
         }
     }
 
-    public static void main(String[] args) {
-        (new BrokerAgent()).initializeShares();
-    }
 }
 
 

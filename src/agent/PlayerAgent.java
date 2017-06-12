@@ -4,9 +4,12 @@ import agent.util.AgentUtil;
 import com.google.gson.Gson;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import model.Ontology;
+import model.Portfolio;
 import model.request.AddAccountRequest;
 import model.request.PortfolioRequest;
 import model.request.ShowFundsRequest;
@@ -18,6 +21,7 @@ public class PlayerAgent extends Agent {
     private AID bankAID;
     private AID brokerAID;
     private Strategy strategy;
+    private MessageTemplate portfolioTemplate = MessageTemplate.MatchOntology(Ontology.PORTFOLIO_REQUEST);
 
     @Override
     protected void setup() {
@@ -36,14 +40,32 @@ public class PlayerAgent extends Agent {
             @Override
             public void action() {
                 ACLMessage queryMessage = AgentUtil.createMessage(getAID(), new PortfolioRequest(),  ACLMessage.REQUEST, Ontology.PORTFOLIO_REQUEST, brokerAID);
-               // queryMessage.setOntology(Ontology.PORTFOLIO_REQUEST);
+                send(queryMessage);
+                addBehaviour(new Behaviour() {
+                    boolean done = false;
+                    @Override
+                    public void action() {
+                        ACLMessage portfolioResponse = receive(portfolioTemplate);
+                        if(portfolioResponse == null) block();
+                        else {
+                            PortfolioRequest portfolioRequest = gson.fromJson(portfolioResponse.getContent(), PortfolioRequest.class);
+                            //TODO deserialize
+                            done = true;
+                        }
+                    }
+
+                    @Override
+                    public boolean done() {
+                        return done;
+                    }
+
+                });
             }
         });
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {
                 ACLMessage queryMessage = AgentUtil.createMessage(getAID(), new ShowFundsRequest(0), ACLMessage.REQUEST, Ontology.FUNDS_REQUEST, bankAID);
-                //queryMessage.setOntology(Ontology.FUNDS_REQUEST);
                 send(queryMessage);
             }
         });
