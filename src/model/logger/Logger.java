@@ -19,7 +19,7 @@ public class Logger {
 
     public Logger (String fileName, String folderName) {
         this.initTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHssSSS"));
-        this.fileName = fileName + "_" + initTime.toString() + ".txt";
+        this.fileName = fileName + "_" + initTime.toString() + ".csv";
         this.file = Paths.get(folderName + "/" + this.fileName);
         try {
             Files.createDirectory(file.getParent());

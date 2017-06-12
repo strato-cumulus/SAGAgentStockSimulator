@@ -5,15 +5,23 @@ import com.google.gson.Gson;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import model.Ontology;
+import model.order.BuyOrder;
+import model.order.Order;
+import model.order.SellOrder;
 import model.request.AddAccountRequest;
 import model.request.EquilibriumRequest;
 import model.request.ShowFundsRequest;
+import model.request.TradeRequest;
 import strategy.Strategy;
+
+import java.util.List;
+import java.util.Map;
 
 public class PlayerAgent extends Agent {
 
@@ -21,6 +29,9 @@ public class PlayerAgent extends Agent {
     private AID bankAID;
     private AID brokerAID;
     private Strategy strategy;
+    private boolean readyToTrade;
+    private SellOrder sellOrder;
+    private BuyOrder buyOrder;
     private MessageTemplate equilibriumTemplate = MessageTemplate.MatchOntology(Ontology.EQUILIBRIUM_REQUEST);
 
     @Override
@@ -29,6 +40,7 @@ public class PlayerAgent extends Agent {
         bankAID = BankAgent.aid;
         brokerAID = BrokerAgent.aid;
         strategy = Strategy.fromString((String) getArguments()[0]);
+        readyToTrade = false;
 
         addBehaviour(new OneShotBehaviour() {
             @Override
@@ -53,6 +65,8 @@ public class PlayerAgent extends Agent {
                         else {
                             EquilibriumRequest equilibriumResponse = gson.fromJson(response.getContent(), EquilibriumRequest.class);
                             System.out.println(equilibriumResponse.equilibriumPrice );
+                            //calculate best offer
+                            readyToTrade = true;
                             done = true;
                         }
                     }
@@ -65,6 +79,19 @@ public class PlayerAgent extends Agent {
                 });
             }
         });
+
+        addBehaviour(new CyclicBehaviour() {
+            @Override
+            public void action() {
+                if (readyToTrade == true) {
+                    ACLMessage buyMessage = AgentUtil.createMessage(getAID(), new TradeRequest(buyOrder), ACLMessage.REQUEST, Ontology.BUY_ORDER);
+                    ACLMessage sellMessage = AgentUtil.createMessage(getAID(), new TradeRequest(sellOrder), ACLMessage.REQUEST, Ontology.SELL_ORDER);
+                    send(buyMessage);
+                    send(sellMessage);
+                }
+            }
+        });
+
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {

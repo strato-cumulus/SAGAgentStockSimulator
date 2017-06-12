@@ -37,7 +37,7 @@ public class BrokerAgent extends Agent {
     private MessageTemplate equilibriumTemplate = MessageTemplate.MatchOntology(Ontology.EQUILIBRIUM_REQUEST);
     private MessageTemplate portfolioTemplate = MessageTemplate.MatchOntology(Ontology.PORTFOLIO_REQUEST);
     private MessageTemplate buyTemplate = MessageTemplate.MatchOntology(Ontology.BUY_ORDER);
-    private MessageTemplate sellTemplate = MessageTemplate.MatchOntology(Ontology.SELL_TRANSACTION);
+    private MessageTemplate sellTemplate = MessageTemplate.MatchOntology(Ontology.SELL_ORDER);
     private MessageTemplate blockTemplate = MessageTemplate.MatchOntology(Ontology.BLOCK_FUNDS);
 
     private List<SellOrder> sellOrders = new LinkedList<>();
