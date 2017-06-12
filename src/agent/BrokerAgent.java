@@ -16,11 +16,13 @@ import model.account.Account;
 import model.order.BuyOrder;
 import model.order.SellOrder;
 import model.request.BlockFundsRequest;
+import model.request.EquilibriumRequest;
 import model.request.PortfolioRequest;
 import model.request.SellOrdersRequest;
 import resource.ResourceCreationException;
 import resource.data.FileShareCreator;
 import resource.data.ShareCreator;
+import sun.awt.EventQueueItem;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -37,7 +39,7 @@ public class BrokerAgent extends Agent {
     private List<String> indexesList;
     private Map<AID, Account> players = new HashMap<AID, Account>();
 
-    private MessageTemplate sellOrdersRequestTemplate = MessageTemplate.MatchOntology(Ontology.SELL_ORDERS_REQUEST);
+    private MessageTemplate equilibriumTemplate = MessageTemplate.MatchOntology(Ontology.EQUILIBRIUM_REQUEST);
     private MessageTemplate portfolioTemplate = MessageTemplate.MatchOntology(Ontology.PORTFOLIO_REQUEST);
     private MessageTemplate buyTemplate = MessageTemplate.MatchOntology(Ontology.BUY_ORDER);
     private MessageTemplate sellTemplate = MessageTemplate.MatchOntology(Ontology.SELL_TRANSACTION);
@@ -66,19 +68,18 @@ public class BrokerAgent extends Agent {
 
         //SellOrdersRequest
         addBehaviour(new TickerBehaviour(this, 10) {
-            private SellOrdersRequest sellOrdersRequest;
+            private EquilibriumRequest equilibriumRequest;
             private AID senderAID;
             @Override
             public void onTick() {
-                ACLMessage message = receive(sellOrdersRequestTemplate);
+                ACLMessage message = receive(equilibriumTemplate);
                 if(message == null) {
                     block();
                 }
                 else {
-                    sellOrdersRequest = gson.fromJson(message.getContent(), SellOrdersRequest.class);
+                    equilibriumRequest = gson.fromJson(message.getContent(), EquilibriumRequest.class);
                     senderAID = message.getSender();
-                    sellOrdersRequest.sellOrders.addAll(sellOrders);
-                    send(AgentUtil.createMessage(getAID(), sellOrdersRequest, ACLMessage.REQUEST, Ontology.SELL_ORDERS_REQUEST, senderAID));
+                    send(AgentUtil.createMessage(getAID(), equilibriumRequest, ACLMessage.REQUEST, Ontology.EQUILIBRIUM_REQUEST, senderAID));
                     players.putIfAbsent(senderAID, new Account());
                     if (getTickCount() > 100) {
                         stop();
