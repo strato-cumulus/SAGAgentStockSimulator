@@ -5,13 +5,16 @@ import com.google.gson.Gson;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
+import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import model.Ontology;
 import model.Portfolio;
 import model.request.AddAccountRequest;
 import model.request.PortfolioRequest;
+import model.request.SellOrdersRequest;
 import model.request.ShowFundsRequest;
 import strategy.Strategy;
 
@@ -21,7 +24,7 @@ public class PlayerAgent extends Agent {
     private AID bankAID;
     private AID brokerAID;
     private Strategy strategy;
-    private MessageTemplate portfolioTemplate = MessageTemplate.MatchOntology(Ontology.PORTFOLIO_REQUEST);
+    private MessageTemplate sellOrdersRequestTemplate = MessageTemplate.MatchOntology(Ontology.SELL_ORDERS_REQUEST);
 
     @Override
     protected void setup() {
@@ -36,17 +39,17 @@ public class PlayerAgent extends Agent {
                 send(AgentUtil.createMessage(getAID(), accountRequest,  ACLMessage.REQUEST, Ontology.ADD_ACCOUNT, bankAID));
             }
         });
-        addBehaviour(new OneShotBehaviour() {
+        addBehaviour(new TickerBehaviour(this, 100) {
             @Override
-            public void action() {
-                ACLMessage queryMessage = AgentUtil.createMessage(getAID(), new PortfolioRequest(),  ACLMessage.REQUEST, Ontology.PORTFOLIO_REQUEST, brokerAID);
+            public void onTick() {
+                ACLMessage queryMessage = AgentUtil.createMessage(getAID(), new SellOrdersRequest(),  ACLMessage.REQUEST, Ontology.SELL_ORDERS_REQUEST, brokerAID);
                 send(queryMessage);
                 addBehaviour(new Behaviour() {
                     boolean done = false;
                     @Override
                     public void action() {
-                        ACLMessage portfolioResponse = receive(portfolioTemplate);
-                        if(portfolioResponse == null) block();
+                        ACLMessage response = receive(sellOrdersRequestTemplate);
+                        if(response == null) block();
                         else {
                             PortfolioRequest portfolioRequest = gson.fromJson(portfolioResponse.getContent(), PortfolioRequest.class);
                             //TODO deserialize
