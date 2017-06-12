@@ -12,16 +12,11 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import model.Ontology;
 import model.order.BuyOrder;
-import model.order.Order;
 import model.order.SellOrder;
 import model.request.AddAccountRequest;
 import model.request.EquilibriumRequest;
 import model.request.ShowFundsRequest;
-import model.request.TradeRequest;
 import strategy.Strategy;
-
-import java.util.List;
-import java.util.Map;
 
 public class PlayerAgent extends Agent {
 
@@ -84,8 +79,8 @@ public class PlayerAgent extends Agent {
             @Override
             public void action() {
                 if (readyToTrade == true) {
-                    ACLMessage buyMessage = AgentUtil.createMessage(getAID(), new TradeRequest(buyOrder), ACLMessage.REQUEST, Ontology.BUY_ORDER);
-                    ACLMessage sellMessage = AgentUtil.createMessage(getAID(), new TradeRequest(sellOrder), ACLMessage.REQUEST, Ontology.SELL_ORDER);
+                    ACLMessage buyMessage = AgentUtil.createMessage(getAID(), buyOrder, ACLMessage.REQUEST, Ontology.BUY_ORDER);
+                    ACLMessage sellMessage = AgentUtil.createMessage(getAID(), sellOrder, ACLMessage.REQUEST, Ontology.SELL_ORDER);
                     send(buyMessage);
                     send(sellMessage);
                 }
