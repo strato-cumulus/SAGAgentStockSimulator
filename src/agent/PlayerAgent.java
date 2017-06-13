@@ -50,7 +50,7 @@ public class PlayerAgent extends Agent {
         });
 
         //EquilibriumRequest
-        addBehaviour(new TickerBehaviour(this, 100) {
+        addBehaviour(new TickerBehaviour(this, 5000) {
             @Override
             public void onTick() {
                 ACLMessage queryMessage = AgentUtil.createMessage(getAID(), new EquilibriumRequest(),  ACLMessage.REQUEST, Ontology.EQUILIBRIUM_REQUEST, brokerAID);

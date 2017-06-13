@@ -17,8 +17,12 @@ public class OnFallSelling extends Strategy {
     @Override
     public Order perform(ACLMessage message, int funds) {
         EquilibriumRequest request = unpack(message);
-        SortedMap<String, List<Integer>> map = new TreeMap<>((s1, s2) ->
-                comparator.reverseCompare(request.historicalEquilibriumPrice.get(s1), request.historicalEquilibriumPrice.get(s2)));
+        System.out.println(request.historicalEquilibriumPrice);
+        //TODO fix this
+//        SortedMap<String, List<Integer>> map = new TreeMap<>((s1, s2) ->
+//                comparator.reverseCompare(request.historicalEquilibriumPrice.get(s1), request.historicalEquilibriumPrice.get(s2)));
+        SortedMap<String, List<Integer>> map = new TreeMap<>();
+        map.putAll(request.historicalEquilibriumPrice);
         return new SellOrder(map.firstKey(), (int)Math.floor(maxPartSpent*funds/request.equilibriumPrice.get(map.firstKey())), message.getAllReceiver().next().toString(), request.equilibriumPrice.get(map.firstKey()));
     }
 }

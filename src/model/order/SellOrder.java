@@ -4,8 +4,6 @@ import java.util.Comparator;
 
 public class SellOrder extends Order {
 
-    public final long unitPrice;
-
     public SellOrder(String stock, int quantity, String sellerName, int unitPrice) {
         super(stock, quantity, sellerName);
         this.unitPrice = unitPrice;

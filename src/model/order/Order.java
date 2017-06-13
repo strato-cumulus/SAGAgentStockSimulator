@@ -4,7 +4,7 @@ public abstract class Order {
 
     protected final String stock;
     private int quantity;
-    private int unitPrice;
+    protected int unitPrice;
     private final String playerName;
 
     public Order(String stock, int quantity, String playerName) {
