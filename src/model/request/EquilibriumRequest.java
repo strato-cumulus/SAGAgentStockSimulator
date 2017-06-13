@@ -2,11 +2,7 @@ package model.request;
 
 import model.messagecontent.Information;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
 
 public class EquilibriumRequest {
     public final Map<String, Integer> equilibriumPrice = new HashMap<>();

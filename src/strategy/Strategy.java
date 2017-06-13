@@ -15,10 +15,10 @@ public abstract class Strategy {
 
     public static Strategy fromString(String strategyName) {
         switch(strategyName) {
-            case "CheapestBuy": return new OnFallBuying();
             case "InformationResponding": return new InformationResponding();
             case "OnFallBuying": return new OnFallBuying();
             case "OnRiseBuying": return new OnRiseBuying();
+            case "OnFallSelling": return new OnFallSelling();
         }
         return null;
     }

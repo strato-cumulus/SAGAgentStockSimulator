@@ -7,15 +7,13 @@ import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import model.Ontology;
-import model.math.Line;
-import model.math.Point;
 import model.order.BuyOrder;
 import model.order.SellOrder;
 import model.request.CommitTransactionRequest;
 import model.request.EquilibriumRequest;
 import model.transaction.Transaction;
 
-import java.util.*;
+import java.util.List;
 
 public class TransactionManager extends CyclicBehaviour {
 

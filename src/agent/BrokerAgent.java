@@ -194,6 +194,10 @@ public class BrokerAgent extends Agent {
             shareCreator.initializeShares();
             equilibrium = shareCreator.getInitialEquilibriumPrices();
             sellOrders = shareCreator.getInitialSellOrders();
+            //TODO remove and fix strategies
+            Map<String, Integer> price = new HashMap<>();
+            price.putAll(equilibrium.equilibriumPrice);
+            equilibrium.updatePrices(price);
         } catch (ResourceCreationException e) {
             e.printStackTrace();
         }

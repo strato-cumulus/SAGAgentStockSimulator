@@ -1,7 +1,6 @@
 package strategy;
 
 import jade.lang.acl.ACLMessage;
-import model.order.BuyOrder;
 import model.order.Order;
 import model.order.SellOrder;
 import model.request.EquilibriumRequest;

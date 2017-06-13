@@ -15,7 +15,6 @@ $max_funds = 3000
 $game_length = 100
 
 $agents_names=@(
-    "CheapestBuy",
     "InformationResponding",
     "OnFallBuying",
     "OnRiseBuying"
@@ -23,28 +22,22 @@ $agents_names=@(
 
 $agents_config=@(1,2)
 
-#CheapestBuy
-for ( $i = 0; $i -lt $args[0]; $i++) {
-	$cash = Get-Random -minimum $min_funds -maximum $max_funds
-    $agents_array.Add($agents_names[0] + "_" + $i + ":" + $player_class + "(CheapestBuy, " + $cash + ")")
-}
-
 #InformationResponding
 for ( $i = 0; $i -lt $args[0]; $i++) {
 	$cash = Get-Random -minimum $min_funds -maximum $max_funds
-    $agents_array.Add($agents_names[1] + "_" + $i + ":" + $player_class + "(InformationResponding, " + $cash + ")")
+    $agents_array.Add($agents_names[0] + "_" + $i + ":" + $player_class + "(InformationResponding, OnFallSelling, " + $cash + ")")
 }
 
 #OnFallBuying
 for ( $i = 0; $i -lt $args[0]; $i++) {
 	$cash = Get-Random -minimum $min_funds -maximum $max_funds
-    $agents_array.Add($agents_names[2] + "_" + $i + ":" + $player_class + "(OnFallBuying, " + $cash + ")")
+    $agents_array.Add($agents_names[1] + "_" + $i + ":" + $player_class + "(OnFallBuying, OnFallSelling, " + $cash + ")")
 }
 
 #OnRiseBuying
 for ( $i = 0; $i -lt $args[0]; $i++) {
 	$cash = Get-Random -minimum $min_funds -maximum $max_funds
-    $agents_array.Add($agents_names[3] + "_" + $i + ":" + $player_class + "(OnRiseBuying, " + $cash + ")")
+    $agents_array.Add($agents_names[2] + "_" + $i + ":" + $player_class + "(OnRiseBuying, OnFallSelling, " + $cash + ")")
 }
 
 

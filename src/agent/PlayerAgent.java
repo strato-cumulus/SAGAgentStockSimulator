@@ -11,11 +11,10 @@ import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import model.Ontology;
-import model.order.BuyOrder;
-import model.order.SellOrder;
+import model.order.Order;
 import model.request.AddAccountRequest;
+import model.request.CheckFundsRequest;
 import model.request.EquilibriumRequest;
-import model.request.ShowFundsRequest;
 import strategy.Strategy;
 
 public class PlayerAgent extends Agent {
@@ -23,24 +22,29 @@ public class PlayerAgent extends Agent {
     private Gson gson = new Gson();
     private AID bankAID;
     private AID brokerAID;
-    private Strategy strategy;
+    private Strategy buyStrategy;
+    private Strategy sellStrategy;
     private boolean readyToTrade;
-    private SellOrder sellOrder;
-    private BuyOrder buyOrder;
+    private Order sellOrder;
+    private Order buyOrder;
+    private int funds;
+    private int clear;
     private MessageTemplate equilibriumTemplate = MessageTemplate.MatchOntology(Ontology.EQUILIBRIUM_REQUEST);
+    private final MessageTemplate checkFundsTemplate = MessageTemplate.MatchOntology(Ontology.CHECK_FUNDS);
 
     @Override
     protected void setup() {
         super.setup();
         bankAID = BankAgent.aid;
         brokerAID = BrokerAgent.aid;
-        strategy = Strategy.fromString((String) getArguments()[0]);
+        buyStrategy = Strategy.fromString((String) getArguments()[0]);
+        sellStrategy = Strategy.fromString((String) getArguments()[1]);
         readyToTrade = false;
 
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {
-                AddAccountRequest accountRequest = new AddAccountRequest(this.getAgent().getAID().getName(), Integer.parseInt((String) getArguments()[1]));
+                AddAccountRequest accountRequest = new AddAccountRequest(this.getAgent().getAID().getName(), Integer.parseInt((String) getArguments()[2]));
                 send(AgentUtil.createMessage(getAID(), accountRequest,  ACLMessage.REQUEST, Ontology.ADD_ACCOUNT, bankAID));
             }
         });
@@ -59,7 +63,8 @@ public class PlayerAgent extends Agent {
                         if(response == null) block();
                         else {
                             EquilibriumRequest equilibriumResponse = gson.fromJson(response.getContent(), EquilibriumRequest.class);
-                            //calculate best offer
+                            buyOrder = buyStrategy.perform(response, clear);
+                            sellOrder = sellStrategy.perform(response, clear);
                             readyToTrade = true;
                             done = true;
                         }
@@ -78,21 +83,44 @@ public class PlayerAgent extends Agent {
             @Override
             public void action() {
                 if (readyToTrade == true) {
+                    System.out.println("ReadyToTrade");
                     ACLMessage buyMessage = AgentUtil.createMessage(getAID(), buyOrder, ACLMessage.REQUEST, Ontology.BUY_ORDER);
                     ACLMessage sellMessage = AgentUtil.createMessage(getAID(), sellOrder, ACLMessage.REQUEST, Ontology.SELL_ORDER);
                     send(buyMessage);
                     send(sellMessage);
+                    readyToTrade = false;
                 }
             }
         });
 
-        addBehaviour(new OneShotBehaviour() {
+        //CheckFunds
+        addBehaviour(new CyclicBehaviour() {
             @Override
             public void action() {
-                ACLMessage queryMessage = AgentUtil.createMessage(getAID(), new ShowFundsRequest(0), ACLMessage.REQUEST, Ontology.FUNDS_REQUEST, bankAID);
+                ACLMessage queryMessage = AgentUtil.createMessage(getAID(), new CheckFundsRequest(this.getAgent().getAID().getName(), 0,0),  ACLMessage.REQUEST, Ontology.FUNDS_REQUEST, bankAID);
                 send(queryMessage);
+                addBehaviour(new Behaviour() {
+                    boolean done = false;
+                    @Override
+                    public void action() {
+                        ACLMessage response = receive(checkFundsTemplate);
+                        if(response == null) block();
+                        else {
+                            CheckFundsRequest fundsResponse = gson.fromJson(response.getContent(), CheckFundsRequest.class);
+                            funds = fundsResponse.funds;
+                            clear = fundsResponse.clear;
+                            done = true;
+                        }
+                    }
+                    @Override
+                    public boolean done() {
+                        return done;
+                    }
+
+                });
             }
         });
+
     }
 
 
