@@ -2,9 +2,11 @@
 $project_path=$PSScriptRoot+"\.."
 $jade_path=$project_path+"\lib\jade.jar"
 $out_path=$project_path+"\out\production\SAGAgentStockSimulator"
+$properties_path=$project_path+"shares.properties"
 $player_class="agent.PlayerAgent"
 $broker_class="agent.BrokerAgent"
 $banker_class="agent.BankAgent"
+$transactionmanager_class="agent.TransactionManager"
 $class_path = $jade_path + ";" + $out_path + ";" + $project_path+"\lib\gson-2.8.1.jar"
 $container_name = "Stock market"
 $agents_array = [System.Collections.ArrayList]@()
@@ -13,6 +15,13 @@ $min_funds = 2000
 $max_funds = 3000
 
 $game_length = 100
+
+$stock_data = Import-Csv $properties_path -delimiter ","
+$i = 0;
+Foreach($stock in $stock_data) {
+    $agents_array.Add($stock[0] + "_" + $i + ":" + $transactionmanager_class + "(OnFallBuying, OnFallSelling, " + 0 + ")")
+    $i = $i + 1
+}
 
 $agents_names=@(
     "InformationResponding",
