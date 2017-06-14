@@ -12,10 +12,11 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import model.Ontology;
 import model.order.Order;
-import model.request.AddAccountRequest;
-import model.request.CheckFundsRequest;
-import model.request.EquilibriumRequest;
+import model.request.*;
 import strategy.Strategy;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class PlayerAgent extends Agent {
 
@@ -25,12 +26,14 @@ public class PlayerAgent extends Agent {
     private Strategy buyStrategy;
     private Strategy sellStrategy;
     private boolean readyToTrade;
-    private Order sellOrder;
-    private Order buyOrder;
     private int funds;
     private int clear;
-    private MessageTemplate equilibriumTemplate = MessageTemplate.MatchOntology(Ontology.EQUILIBRIUM_REQUEST);
+    private Order sellOrder;
+    private Order buyOrder;
+    private final Map<String, Integer> stocks = new HashMap<>();
+    private MessageTemplate equilibriumResTemplate = MessageTemplate.MatchOntology(Ontology.EQUILIBRIUM_RESPONSE);
     private final MessageTemplate checkFundsTemplate = MessageTemplate.MatchOntology(Ontology.CHECK_FUNDS);
+    private final MessageTemplate addStocksTemplate = MessageTemplate.MatchOntology(Ontology.ADD_STOCKS);
 
     @Override
     protected void setup() {
@@ -59,10 +62,9 @@ public class PlayerAgent extends Agent {
                     boolean done = false;
                     @Override
                     public void action() {
-                        ACLMessage response = receive(equilibriumTemplate);
+                        ACLMessage response = receive(equilibriumResTemplate);
                         if(response == null) block();
                         else {
-                            EquilibriumRequest equilibriumResponse = gson.fromJson(response.getContent(), EquilibriumRequest.class);
                             buyOrder = buyStrategy.perform(response, clear);
                             sellOrder = sellStrategy.perform(response, clear);
                             readyToTrade = true;
@@ -84,11 +86,35 @@ public class PlayerAgent extends Agent {
             public void action() {
                 if (readyToTrade == true) {
                     System.out.println("ReadyToTrade");
-                    ACLMessage buyMessage = AgentUtil.createMessage(getAID(), buyOrder, ACLMessage.REQUEST, Ontology.BUY_ORDER);
-                    ACLMessage sellMessage = AgentUtil.createMessage(getAID(), sellOrder, ACLMessage.REQUEST, Ontology.SELL_ORDER);
+                    ACLMessage buyMessage = AgentUtil.createMessage(getAID(), buyOrder, ACLMessage.REQUEST, Ontology.ORDER);
+                    ACLMessage sellMessage = AgentUtil.createMessage(getAID(), sellOrder, ACLMessage.REQUEST, Ontology.ORDER);
                     send(buyMessage);
                     send(sellMessage);
+                    // pobranie akcji, na które zostało wystawione zlecenie sprzedaży
+                    int currentQuantity = stocks.get(sellOrder.stock);
+                    stocks.put(sellOrder.stock, currentQuantity - sellOrder.getQuantity());
                     readyToTrade = false;
+                }
+            }
+        });
+
+        //odbieranie zakupionych akcji
+        addBehaviour(new CyclicBehaviour() {
+            @Override
+            public void action() {
+                ACLMessage message = receive(addStocksTemplate);
+                if(message == null) {
+                    block();
+                }
+                else {
+                    StocksTransferRequest stocksTransferRequest = gson.fromJson(message.getContent(), StocksTransferRequest.class);
+                    Integer currentAmount = stocks.get(stocksTransferRequest.stock);
+                    if(currentAmount != null) {
+                        stocks.put(stocksTransferRequest.stock, currentAmount + stocksTransferRequest.quantity);
+                    }
+                    else {
+                        stocks.put(stocksTransferRequest.stock, stocksTransferRequest.quantity);
+                    }
                 }
             }
         });
@@ -120,7 +146,6 @@ public class PlayerAgent extends Agent {
                 });
             }
         });
-
     }
 
 

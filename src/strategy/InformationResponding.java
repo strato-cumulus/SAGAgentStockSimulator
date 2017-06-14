@@ -2,9 +2,7 @@ package strategy;
 
 import jade.lang.acl.ACLMessage;
 import model.messagecontent.Information;
-import model.order.BuyOrder;
-import model.order.Order;
-import model.order.SellOrder;
+import model.order.*;
 import model.request.EquilibriumRequest;
 
 import java.util.Comparator;
@@ -22,8 +20,8 @@ public class InformationResponding extends Strategy {
         Information worst = request.informationList.get(0);
         Information best = request.informationList.get(request.informationList.size() - 1);
         if(Comparator.<Information>comparingInt(o -> Math.abs(o.positivity)).compare(worst, best) < 0) {
-            return new SellOrder(worst.stock, (int)Math.floor(maxPartSpent*funds/request.equilibriumPrice.get(worst.stock)), sender, request.equilibriumPrice.get(worst.stock));
+            return new Order(OrderType.SELL, worst.stock, (int)Math.floor(maxPartSpent*funds/request.equilibriumPrice.get(worst.stock)), request.equilibriumPrice.get(worst.stock), sender);
         }
-        return new BuyOrder(worst.stock, (int)Math.floor(maxPartSpent*funds/request.equilibriumPrice.get(worst.stock)), sender);
+        return new Order(OrderType.BUY, worst.stock, (int)Math.floor(maxPartSpent*funds/request.equilibriumPrice.get(worst.stock)), 1, sender);
     }
 }

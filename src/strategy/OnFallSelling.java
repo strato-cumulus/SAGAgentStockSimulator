@@ -2,7 +2,7 @@ package strategy;
 
 import jade.lang.acl.ACLMessage;
 import model.order.Order;
-import model.order.SellOrder;
+import model.order.OrderType;
 import model.request.EquilibriumRequest;
 import strategy.util.BiggestRiseComparator;
 
@@ -23,6 +23,6 @@ public class OnFallSelling extends Strategy {
 //                comparator.reverseCompare(request.historicalEquilibriumPrice.get(s1), request.historicalEquilibriumPrice.get(s2)));
         SortedMap<String, List<Integer>> map = new TreeMap<>();
         map.putAll(request.historicalEquilibriumPrice);
-        return new SellOrder(map.firstKey(), (int)Math.floor(maxPartSpent*funds/request.equilibriumPrice.get(map.firstKey())), message.getAllReceiver().next().toString(), request.equilibriumPrice.get(map.firstKey()));
+        return new Order(OrderType.SELL, map.firstKey(), (int)Math.floor(maxPartSpent*funds/request.equilibriumPrice.get(map.firstKey())), request.equilibriumPrice.get(map.firstKey()), message.getAllReceiver().next().toString());
     }
 }

@@ -1,6 +1,7 @@
 package resource.data;
 
-import model.order.SellOrder;
+import model.order.Order;
+import model.order.OrderType;
 import model.request.EquilibriumRequest;
 import resource.ResourceCreationException;
 
@@ -15,7 +16,7 @@ public final class FileShareCreator extends ShareCreator {
     private final String file;
     private final List<String> allStocks = new ArrayList<>();
     private final EquilibriumRequest initialPrices = new EquilibriumRequest();
-    private final List<SellOrder> initialSellOrders = new LinkedList<>();
+    private final List<Order> initialSellOrders = new LinkedList<>();
 
     public FileShareCreator(String file) throws ResourceCreationException {
         this.file = file;
@@ -38,7 +39,7 @@ public final class FileShareCreator extends ShareCreator {
                 int amount = Integer.parseInt(shareData[0]);
                 int price = Integer.parseInt(shareData[1]);
                 initialPrices.equilibriumPrice.put(tickerCode, price);
-                initialSellOrders.add(new SellOrder(tickerCode, amount, new String("broker-0"), price));
+                initialSellOrders.add(new Order(OrderType.SELL, tickerCode, amount, price, new String("broker-0")));
             }
             catch(NumberFormatException | ArrayIndexOutOfBoundsException e) {
                 throw new ResourceCreationException("Malformed input");
@@ -52,7 +53,7 @@ public final class FileShareCreator extends ShareCreator {
     }
 
     @Override
-    public List<SellOrder> getInitialSellOrders() {
+    public List<Order> getInitialSellOrders() {
         return this.initialSellOrders;
     }
 

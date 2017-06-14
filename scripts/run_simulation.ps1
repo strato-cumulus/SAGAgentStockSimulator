@@ -1,7 +1,7 @@
 ﻿
 $project_path=$PSScriptRoot+"\.."
 $jade_path=$project_path+"\lib\jade.jar"
-$out_path=$project_path+"\out\production\SAG"
+$out_path=$project_path+"\out\production\SAGAgentStockSimulator"
 $player_class="agent.PlayerAgent"
 $broker_class="agent.BrokerAgent"
 $banker_class="agent.BankAgent"

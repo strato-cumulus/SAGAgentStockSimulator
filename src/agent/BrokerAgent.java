@@ -2,24 +2,19 @@ package agent;
 
 import agent.util.AgentUtil;
 import com.google.gson.Gson;
-import controller.manager.TransactionManager;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import model.Ontology;
 import model.Portfolio;
+import model.MarketInfo;
 import model.account.Account;
-import model.math.Line;
-import model.math.Point;
-import model.messagecontent.Information;
-import model.order.BuyOrder;
-import model.order.SellOrder;
-import model.request.BlockFundsRequest;
-import model.request.EquilibriumRequest;
-import model.request.InformationRequest;
+import model.order.Order;
+import model.request.*;
+import model.transaction.Transaction;
 import resource.ResourceCreationException;
 import resource.data.FileShareCreator;
 import resource.data.ShareCreator;
@@ -31,24 +26,19 @@ public class BrokerAgent extends Agent {
     public static final String SHARE_PATH = "C:\\Users\\filip\\Documents\\GitHub\\SAGAgentStockSimulator\\src\\shares.properties";
     public static final AID aid = new AID("broker-0", AID.ISLOCALNAME);
 
+    private MarketInfo marketInfo = new MarketInfo();
     private ShareCreator shareCreator;
     private int gameDuration;
     private Portfolio portfolio;
     private List<String> indexesList;
     private Map<AID, Account> players = new HashMap<AID, Account>();
-    private List<Information> informationList = new ArrayList<>();
-    private Map<String, Integer> equilibriumPrice = new HashMap<String, Integer>();
     private EquilibriumRequest equilibrium;
 
-    private MessageTemplate equilibriumTemplate = MessageTemplate.MatchOntology(Ontology.EQUILIBRIUM_REQUEST);
-    private MessageTemplate portfolioTemplate = MessageTemplate.MatchOntology(Ontology.PORTFOLIO_REQUEST);
-    private MessageTemplate buyTemplate = MessageTemplate.MatchOntology(Ontology.BUY_ORDER);
-    private MessageTemplate sellTemplate = MessageTemplate.MatchOntology(Ontology.SELL_ORDER);
-    private MessageTemplate blockTemplate = MessageTemplate.MatchOntology(Ontology.BLOCK_FUNDS);
+    private MessageTemplate equilibriumReqTemplate = MessageTemplate.MatchOntology(Ontology.EQUILIBRIUM_REQUEST);
     private MessageTemplate infoTemplate = MessageTemplate.MatchOntology(Ontology.INFORMATION);
-
-    private List<SellOrder> sellOrders;
-    private List<BuyOrder> buyOrders = new LinkedList<>();
+    private MessageTemplate orderTemplate = MessageTemplate.MatchOntology(Ontology.ORDER);
+    private MessageTemplate transactionTemplate = MessageTemplate.MatchOntology(Ontology.TRANSACTION);
+    private MessageTemplate equilibriumInfoTemplate = MessageTemplate.MatchOntology(Ontology.EQUILIBRIUM_INFO);
 
     private Gson gson = new Gson();
 
@@ -65,22 +55,22 @@ public class BrokerAgent extends Agent {
 
         initializeShares();
 
-        // add Transaction Manager
-        addBehaviour(new TransactionManager(this, sellOrders, buyOrders, equilibrium));
-
-        //EquilibriumRequest
+        //EquilibriumRequest - gracz pyta o informacje o giełdzie
         addBehaviour(new TickerBehaviour(this, 100) {
-            private EquilibriumRequest equilibriumRequest;
+            private EquilibriumRequest equilibriumRequest = new EquilibriumRequest();
             private AID senderAID;
             @Override
             public void onTick() {
-                ACLMessage message = receive(equilibriumTemplate);
+                ACLMessage message = receive(equilibriumReqTemplate);
                 if(message == null) {
                     block();
                 }
                 else {
+                    equilibriumRequest.updateHistPrices(marketInfo.getPricesHisotry());
+                    equilibriumRequest.updatePrices(marketInfo.getCurrPrices());
+                    equilibriumRequest.updateInformation(marketInfo.getPositivities());
                     senderAID = message.getSender();
-                    send(AgentUtil.createMessage(getAID(), equilibrium, ACLMessage.REQUEST, Ontology.EQUILIBRIUM_REQUEST, senderAID));
+                    send(AgentUtil.createMessage(getAID(), equilibriumRequest, ACLMessage.REQUEST, Ontology.EQUILIBRIUM_RESPONSE, senderAID));
                     if (getTickCount() > 100) {
                         stop();
                     }
@@ -88,73 +78,8 @@ public class BrokerAgent extends Agent {
             }
         });
 
-        // Accept a BuyOrder and place it in the queue, pass info to transaction manager to evaluate transactions
-        addBehaviour(new Behaviour() {
-            private BuyOrder buyOrder;
-            @Override
-            public void action() {
-                ACLMessage message = receive(buyTemplate);
-                if(message == null) {
-                    block();
-                }
-                else {
-                    buyOrder = gson.fromJson(message.getContent(), BuyOrder.class);
-                    int price = buyOrder.getTotalPrice();
-                    send(AgentUtil.createMessage(getAID(), new BlockFundsRequest(message.getSender().getName(), price), ACLMessage.REQUEST, Ontology.BLOCK_FUNDS, BankAgent.aid));
-                    send(AgentUtil.createMessage(getAID(), "", ACLMessage.PROPAGATE, Ontology.EVALUATE, getAID()));
-                    // check for positive/negative response
-                    addBehaviour(new Behaviour() {
-                        boolean done = false;
-                        @Override
-                        public void action() {
-                            ACLMessage blockResponse = receive(blockTemplate);
-                            if(blockResponse == null) block();
-                            else {
-                                BlockFundsRequest request = gson.fromJson(blockResponse.getContent(), BlockFundsRequest.class);
-                                if(request.result) {
-                                    buyOrders.add(buyOrder);
-                                }
-                                done = true;
-                            }
-                        }
-
-                        @Override
-                        public boolean done() {
-                            return done;
-                        }
-                    });
-                }
-            }
-
-            @Override
-            public boolean done() {
-                return false;
-            }
-        });
-
-        // Accept a SellOrder and place it in the queue,  pass info to transaction manager to evaluate transactions
-        addBehaviour(new Behaviour() {
-            private SellOrder sellOrder;
-            @Override
-            public void action() {
-                ACLMessage message = receive(sellTemplate);
-                if(message == null) {
-                    block();
-                }
-                else {
-                    sellOrder = gson.fromJson(message.getContent(), SellOrder.class);
-                    sellOrders.add(sellOrder);
-                    send(AgentUtil.createMessage(getAID(), "", ACLMessage.PROPAGATE, Ontology.EVALUATE, getAID()));
-                }
-            }
-
-            @Override
-            public boolean done() {
-                return false;
-            }
-        });
-
-        addBehaviour(new Behaviour() {
+        //odbieranie informacji o akcjach (wartość liczbowa generowana losowo co jakiś czas)
+        addBehaviour(new CyclicBehaviour() {
             @Override
             public void action() {
                 ACLMessage message = receive(infoTemplate);
@@ -163,172 +88,80 @@ public class BrokerAgent extends Agent {
                 }
                 else {
                     InformationRequest request = gson.fromJson(message.getContent(), InformationRequest.class);
-                    informationList.addAll(request.information);
+                    marketInfo.addPositivities(request.information);
                 }
-            }
-
-            @Override
-            public boolean done() {
-                return false;
             }
         });
 
-        addBehaviour(new TickerBehaviour(this, 500) {
+        //odbieranie kursu akcji od managerów transakcji
+        addBehaviour(new CyclicBehaviour() {
             @Override
-            protected void onTick() {
-                Map<String, Integer> newPrices = new HashMap<String, Integer>();
-                for (String stock : equilibrium.equilibriumPrice.keySet()) {
-                    int price = getEquilibriumPrice(stock);
-                    if(price > 0) {
-                        newPrices.put(stock, getEquilibriumPrice(stock));
-                    }
+            public void action() {
+                ACLMessage message = receive(equilibriumInfoTemplate);
+                if (message == null) {
+                    block();
+                } else {
+                    int price = gson.fromJson(message.getContent(), Integer.class);
+                    String stock = message.getSender().getLocalName();
+                    marketInfo.addPrice(stock, price);
                 }
-                equilibrium.updatePrices(newPrices);
+            }
+        });
+
+
+        //odbieranie orderów od graczy i przekazywanie do odpowiednich managerów
+        addBehaviour(new CyclicBehaviour() {
+            @Override
+            public void action() {
+                ACLMessage message = receive(orderTemplate);
+                Order order = gson.fromJson(message.getContent(), Order.class);
+                if (message == null) {
+                    block();
+                } else {
+                    send(AgentUtil.createMessage(getAID(), message.getContent(), ACLMessage.REQUEST, Ontology.TRANSACTION, new AID(order.stock, AID.ISLOCALNAME)));
+                }
+            }
+        });
+
+        // odbieranie transakcji od managerów i ich finalizowanie
+        addBehaviour(new CyclicBehaviour() {
+            @Override
+            public void action() {
+                ACLMessage message = receive(transactionTemplate);
+                if (message == null) {
+                    block();
+                } else {
+                    Transaction transaction = gson.fromJson(message.getContent(), Transaction.class);
+
+                    MoneyTransferRequest moneyTransferRequest = new MoneyTransferRequest(
+                            transaction.buyerName,
+                            transaction.sellerName,
+                            transaction.price * transaction.quantity,
+                            transaction.offerPrice * transaction.quantity);
+
+                    StocksTransferRequest stocksTransferRequest = new StocksTransferRequest(transaction.stock, transaction.quantity);
+                    //obiciążenie konta gracza, który kupił (i odblokowanie zablokowanych środków) i zasilenie sprzedającego
+                    send(AgentUtil.createMessage(getAID(), moneyTransferRequest, ACLMessage.REQUEST, Ontology.TRANSFER, BankAgent.aid));
+                    //wysłanie akcji do playera, który kupił
+                    send(AgentUtil.createMessage(getAID(), stocksTransferRequest, ACLMessage.REQUEST, Ontology.ADD_STOCKS, new AID(transaction.buyerName, AID.ISLOCALNAME)));
+
+                }
             }
         });
     }
 
-    protected void initializeShares() {
+    private void initializeShares() {
         try {
             shareCreator = new FileShareCreator(SHARE_PATH);
             shareCreator.initializeShares();
             equilibrium = shareCreator.getInitialEquilibriumPrices();
-            sellOrders = shareCreator.getInitialSellOrders();
             //TODO remove and fix strategies
             Map<String, Integer> price = new HashMap<>();
             price.putAll(equilibrium.equilibriumPrice);
-            equilibrium.updatePrices(price);
+            marketInfo.updatePrices(price);
         } catch (ResourceCreationException e) {
             e.printStackTrace();
         }
-    }
-
-    private int getEquilibriumPrice(String tickerCode) {
-        // <cena, ilosc>
-        SortedMap<Integer, Integer> buyOrdersMap = new TreeMap<>(Collections.reverseOrder());
-        SortedMap<Integer, Integer> sellOrdersMap = new TreeMap<>();
-        Map<Integer, Integer> supplyMap = new HashMap<>();
-        Map<Integer, Integer> demandMap = new HashMap<>();
-        Point A1 = new Point();
-        Point B1 = new Point();
-        Point A2 = new Point();
-        Point B2 = new Point();
-        Integer distribution = 0;
-
-        for(BuyOrder buyOrder : buyOrders) {
-            Integer value;
-            if(buyOrder.getStock() == tickerCode) {
-                value = buyOrdersMap.putIfAbsent(buyOrder.getUnitPrice(), buyOrder.getQuantity());
-                if (value != null) {
-                    buyOrdersMap.put(buyOrder.getUnitPrice(), value + buyOrder.getQuantity());
-                }
-            }
-        }
-
-        for(SellOrder sellOrder : sellOrders) {
-            Integer value;
-            if(sellOrder.getStock() == tickerCode) {
-                value = sellOrdersMap.putIfAbsent(sellOrder.getUnitPrice(), sellOrder.getQuantity());
-                if (value != null) {
-                    sellOrdersMap.put(sellOrder.getUnitPrice(), value + sellOrder.getQuantity());
-                }
-            }
-        }
-
-        if(buyOrdersMap.size() == 0 && sellOrdersMap.size() == 0) {
-            return -1;
-        }
-
-        if(buyOrdersMap.size() == 0) {
-            List<Integer> multiplication = new LinkedList<>();
-            for(Integer key : sellOrdersMap.keySet()) {
-                multiplication.add(key * sellOrdersMap.get(key));
-            }
-            return  multiplication.stream().reduce(0, Integer::sum)/sellOrdersMap.values().stream().reduce(0, Integer::sum);
-        }
-
-        if(sellOrdersMap.size() == 0) {
-            List<Integer> multiplication = new LinkedList<>();
-            for(Integer key : buyOrdersMap.keySet()) {
-                multiplication.add(key * buyOrdersMap.get(key));
-            }
-            return  multiplication.stream().reduce(0, Integer::sum)/buyOrdersMap.values().stream().reduce(0, Integer::sum);
-        }
-
-        for(Map.Entry<Integer,Integer> entry : sellOrdersMap.entrySet()) {
-            distribution = distribution + distribution + entry.getValue();
-            supplyMap.put(entry.getKey(),distribution);
-        }
-
-        for(Map.Entry<Integer,Integer> entry : buyOrdersMap.entrySet()) {
-            distribution = distribution + distribution + entry.getValue();
-            supplyMap.put(entry.getKey(),distribution);
-        }
-
-        List<Integer> supplyPrice = new LinkedList<>();
-        supplyPrice.addAll(supplyMap.keySet());
-
-        List<Integer> demandPrice = new LinkedList<>();
-        demandPrice.addAll(demandMap.keySet());
-
-        Set<Integer> computingSet = new HashSet<>();
-        computingSet.addAll(supplyPrice);
-        computingSet.addAll(demandPrice);
-        Set<Integer> sortedSet = new TreeSet<>();
-        sortedSet.addAll(computingSet);
-
-        List<Integer> sortedList = new ArrayList<>(sortedSet);
-
-        for(int i = 0; i < sortedList.size(); i++) {
-            Integer supplyQuantity = supplyMap.get(sortedList.get(i));
-            if(supplyQuantity == null) continue;
-            Integer demandQuantity = demandMap.get(sortedList.get(i));
-            if(demandQuantity == null) demandQuantity = Integer.MAX_VALUE;
-
-            if(supplyQuantity == demandQuantity) {
-                return sortedList.get(i);
-            }
-
-            if(supplyQuantity < demandQuantity) {
-                int j;
-                int k;
-                for (j = i+1; supplyMap.get(sortedList.get(j)) == null && j < sortedList.size(); j++);
-                for (k = i+1; demandMap.get(sortedList.get(k)) == null && k < sortedList.size(); k++);
-                Integer nextSupplyQuantity = supplyMap.get(sortedList.get(j));
-                Integer nextDemandQuantity = demandMap.get(sortedList.get(k));
-                if(nextDemandQuantity < nextSupplyQuantity) {
-                    A1 = new Point(supplyQuantity.doubleValue(), sortedList.get(i).doubleValue());
-                    B1 = new Point(nextSupplyQuantity.doubleValue(), sortedList.get(j).doubleValue());
-                }
-            }
-        }
-
-        for(int i = sortedList.size() - 1; i >= 0; i--) {
-            Integer supplyQuantity = supplyMap.get(sortedList.get(i));
-            if(supplyQuantity == null) supplyQuantity = Integer.MAX_VALUE;;
-            Integer demandQuantity = demandMap.get(sortedList.get(i));
-            if(demandQuantity == null) continue;
-
-            if(demandQuantity < supplyQuantity) {
-                int j;
-                int k;
-                for (j = i-1; supplyMap.get(sortedList.get(j)) == null && j >= 0; j--);
-                for (k = i-1; demandMap.get(sortedList.get(k)) == null && k >= 0; k--);
-                Integer nextSupplyQuantity = supplyMap.get(sortedList.get(j));
-                Integer nextDemandQuantity = demandMap.get(sortedList.get(k));
-                if(nextDemandQuantity > nextSupplyQuantity) {
-                    A2 = new Point(demandQuantity.doubleValue(), sortedList.get(i).doubleValue());
-                    B2 = new Point(nextDemandQuantity.doubleValue(), sortedList.get(k).doubleValue());
-                }
-            }
-        }
-        return intersection(A1, B1, A2, B2);
-    }
-
-    private int intersection (Point A1, Point B1, Point A2, Point B2 ) {
-        Line LA = Line.getLineFromPoints(A1, B1);
-        Line LB = Line.getLineFromPoints(A2, B2);
-        return LA.getIntersection(LB).getY().intValue();
     }
 
 }

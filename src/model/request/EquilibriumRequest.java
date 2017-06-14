@@ -20,8 +20,17 @@ public class EquilibriumRequest {
     }
 
     public void updatePrices(Map<String, Integer> newPrices) {
-        addHistoricalPrices(this.equilibriumPrice);
         this.equilibriumPrice.clear();
         this.equilibriumPrice.putAll(newPrices);
+    }
+
+    public void updateHistPrices(Map<String, List<Integer>> histPrices) {
+        this.historicalEquilibriumPrice.clear();
+        this.historicalEquilibriumPrice.putAll(histPrices);
+    }
+
+    public void updateInformation(List<Information> informationList) {
+        this.informationList.clear();
+        this.informationList.addAll(informationList);
     }
 }

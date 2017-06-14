@@ -12,7 +12,7 @@ import model.account.Account;
 import model.request.AddAccountRequest;
 import model.request.BlockFundsRequest;
 import model.request.CheckFundsRequest;
-import model.request.CommitTransactionRequest;
+import model.request.MoneyTransferRequest;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,7 +25,7 @@ public class BankAgent extends Agent {
     private final MessageTemplate addAccountTemplate = MessageTemplate.MatchOntology(Ontology.ADD_ACCOUNT);
     private final MessageTemplate checkFundsTemplate = MessageTemplate.MatchOntology(Ontology.CHECK_FUNDS);
     private final MessageTemplate blockFundsTemplate = MessageTemplate.and(MessageTemplate.MatchSender(BrokerAgent.aid), MessageTemplate.MatchOntology(Ontology.BLOCK_FUNDS));
-    private final MessageTemplate commitTransactionTemplate = MessageTemplate.and(MessageTemplate.MatchSender(BrokerAgent.aid), MessageTemplate.MatchOntology(Ontology.COMMIT_TRANSACTION));
+    private final MessageTemplate transferTemplate = MessageTemplate.and(MessageTemplate.MatchSender(BrokerAgent.aid), MessageTemplate.MatchOntology(Ontology.TRANSFER));
 
     private Map<String, Account> accounts = new HashMap<>();
 
@@ -98,16 +98,20 @@ public class BankAgent extends Agent {
             }
         });
 
-        // Add or subtract funds (commit tx)
+        // Money transfer
         addBehaviour(new Behaviour() {
             @Override
             public void action() {
-                ACLMessage message = receive(commitTransactionTemplate);
+                ACLMessage message = receive(transferTemplate);
                 if(message == null) block();
                 else {
-                    CommitTransactionRequest request = gson.fromJson(message.getContent(), CommitTransactionRequest.class);
-                    Account account = accounts.get(request.agentName);
-                    account.subtract(request.amount);
+                    MoneyTransferRequest request = gson.fromJson(message.getContent(), MoneyTransferRequest.class);
+                    Account accountFrom = accounts.get(request.playerFrom);
+                    Account accountTo = accounts.get(request.playerTo);
+                    accountFrom.unblockFunds(request.blockedAmount);
+                    accountFrom.blockFunds(request.amount);
+                    accountFrom.subtract(request.amount);
+                    accountTo.add(request.amount);
                 }
             }
 

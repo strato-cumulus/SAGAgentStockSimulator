@@ -1,6 +1,6 @@
 package resource.data;
 
-import model.order.SellOrder;
+import model.order.Order;
 import model.request.EquilibriumRequest;
 import resource.ResourceCreationException;
 
@@ -11,6 +11,6 @@ public abstract class ShareCreator {
 
     public abstract void initializeShares() throws ResourceCreationException;
     public abstract EquilibriumRequest getInitialEquilibriumPrices();
-    public abstract List<SellOrder> getInitialSellOrders();
+    public abstract List<Order> getInitialSellOrders();
     public abstract List<String> getAllStocks();
 }

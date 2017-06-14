@@ -8,9 +8,6 @@ public class Account {
     protected int clear = 0;
     protected Map<String, Set<String>> sharesPerStock = new HashMap<>();
 
-    public Account() {
-    }
-
     public Account(int funds) {
         this.funds = funds;
         this.clear = funds;
@@ -40,6 +37,10 @@ public class Account {
 
     public int getClear() {
         return clear;
+    }
+
+    public void add(int amount) {
+        funds += amount;
     }
 
     public void setClear(int clear) {

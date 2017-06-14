@@ -1,8 +1,8 @@
 package strategy;
 
 import jade.lang.acl.ACLMessage;
-import model.order.BuyOrder;
 import model.order.Order;
+import model.order.OrderType;
 import model.request.EquilibriumRequest;
 import strategy.util.BiggestRiseComparator;
 
@@ -22,6 +22,6 @@ public class OnFallBuying extends Strategy {
 //                comparator.reverseCompare(request.historicalEquilibriumPrice.get(s1), request.historicalEquilibriumPrice.get(s2)));
         SortedMap<String, List<Integer>> map = new TreeMap<>();
         map.putAll(request.historicalEquilibriumPrice);
-        return new BuyOrder(map.firstKey(), (int)Math.floor(maxPartSpent*funds/request.equilibriumPrice.get(map.firstKey())), message.getAllReceiver().next().toString());
+        return new Order(OrderType.BUY, map.firstKey(), (int)Math.floor(maxPartSpent*funds/request.equilibriumPrice.get(map.firstKey())), 1, message.getAllReceiver().next().toString());
     }
 }
