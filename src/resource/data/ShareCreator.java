@@ -2,15 +2,15 @@ package resource.data;
 
 import model.MarketInfo;
 import model.order.Order;
-import model.request.EquilibriumRequest;
-import resource.ResourceCreationException;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 public abstract class ShareCreator {
 
-    public abstract void initializeShares() throws ResourceCreationException;
+    public abstract void initializeShares() throws IOException;
     public abstract MarketInfo getInitialPrices();
     public abstract List<Order> getInitialSellOrders();
-    public abstract List<String> getAllStocks();
+    public abstract Set<String> getAllStocks();
 }

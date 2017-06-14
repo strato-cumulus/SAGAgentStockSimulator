@@ -3,47 +3,31 @@ package resource.data;
 import model.MarketInfo;
 import model.order.Order;
 import model.order.OrderType;
-import resource.ResourceCreationException;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.*;
 
 public final class FileShareCreator extends ShareCreator {
 
     private final String file;
-    private final List<String> allStocks = new ArrayList<>();
+    private final Set<String> allStocks = new LinkedHashSet<>();
     private final MarketInfo initialPrices = new MarketInfo();
     private final List<Order> initialSellOrders = new LinkedList<>();
 
-    public FileShareCreator(String file) throws ResourceCreationException {
+    public FileShareCreator(String file) throws IOException {
         this.file = file;
     }
 
     @Override
-    public void initializeShares() throws ResourceCreationException {
-        Properties fileStockDefinitions = new Properties();
-        try {
-            fileStockDefinitions.load(new InputStreamReader(new FileInputStream(file)));
-        }
-        catch (IOException e) {
-            throw new ResourceCreationException((e instanceof FileNotFoundException)?"File not found":"Malformed input");
-        }
-        Set<String> tickerCodes = fileStockDefinitions.stringPropertyNames();
-        allStocks.addAll(tickerCodes);
-        for(String tickerCode: tickerCodes) {
-            String[] shareData = fileStockDefinitions.getProperty(tickerCode).split(";");
-            try {
-                int amount = Integer.parseInt(shareData[0]);
-                int price = Integer.parseInt(shareData[1]);
-                initialPrices.addPrice(tickerCode, price);
-                initialSellOrders.add(new Order(OrderType.SELL, tickerCode, amount, price, new String("broker-0")));
-            }
-            catch(NumberFormatException | ArrayIndexOutOfBoundsException e) {
-                throw new ResourceCreationException("Malformed input");
-            }
+    public void initializeShares() throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
+        String line;
+        while((line = reader.readLine()) != null) {
+            String[] info = line.split(",");
+            if(info.length < 3) throw new IOException("Malformed input");
+            allStocks.add(info[0]);
+            initialSellOrders.add(new Order(OrderType.SELL, info[0], Integer.parseInt(info[1]),
+                    Integer.parseInt(info[2]), "broker-0"));
         }
     }
 
@@ -57,7 +41,7 @@ public final class FileShareCreator extends ShareCreator {
     }
 
     @Override
-    public List<String> getAllStocks() {
+    public Set<String> getAllStocks() {
         return allStocks;
     }
 }

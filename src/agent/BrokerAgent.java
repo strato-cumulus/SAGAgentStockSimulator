@@ -15,10 +15,10 @@ import model.account.Account;
 import model.order.Order;
 import model.request.*;
 import model.transaction.Transaction;
-import resource.ResourceCreationException;
 import resource.data.FileShareCreator;
 import resource.data.ShareCreator;
 
+import java.io.IOException;
 import java.util.*;
 
 public class BrokerAgent extends Agent {
@@ -158,7 +158,7 @@ public class BrokerAgent extends Agent {
             Map<String, Integer> price = new HashMap<>();
             price.putAll(marketInfo.getCurrPrices());
             marketInfo.updatePrices(price);
-        } catch (ResourceCreationException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

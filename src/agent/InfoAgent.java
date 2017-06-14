@@ -6,10 +6,10 @@ import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
 import model.Ontology;
 import model.messagecontent.Information;
-import resource.ResourceCreationException;
 import resource.data.FileShareCreator;
 import resource.data.ShareCreator;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,7 +31,7 @@ public class InfoAgent extends Agent {
             tickerCodes = new ArrayList<>();
             tickerCodes.addAll(shareCreator.getAllStocks());
         }
-        catch(ResourceCreationException e) {
+        catch(IOException e) {
             tickerCodes = Collections.emptyList();
         }
 
