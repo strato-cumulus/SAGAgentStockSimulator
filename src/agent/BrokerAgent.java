@@ -32,7 +32,6 @@ public class BrokerAgent extends Agent {
     private Portfolio portfolio;
     private List<String> indexesList;
     private Map<AID, Account> players = new HashMap<AID, Account>();
-    private EquilibriumRequest equilibrium;
 
     private MessageTemplate equilibriumReqTemplate = MessageTemplate.MatchOntology(Ontology.EQUILIBRIUM_REQUEST);
     private MessageTemplate infoTemplate = MessageTemplate.MatchOntology(Ontology.INFORMATION);
@@ -66,7 +65,7 @@ public class BrokerAgent extends Agent {
                     block();
                 }
                 else {
-                    equilibriumRequest.updateHistPrices(marketInfo.getPricesHisotry());
+                    equilibriumRequest.updateHistPrices(marketInfo.getPricesHistory());
                     equilibriumRequest.updatePrices(marketInfo.getCurrPrices());
                     equilibriumRequest.updateInformation(marketInfo.getPositivities());
                     senderAID = message.getSender();
@@ -154,10 +153,10 @@ public class BrokerAgent extends Agent {
         try {
             shareCreator = new FileShareCreator(SHARE_PATH);
             shareCreator.initializeShares();
-            equilibrium = shareCreator.getInitialEquilibriumPrices();
+            MarketInfo info = shareCreator.getInitialPrices();
             //TODO remove and fix strategies
             Map<String, Integer> price = new HashMap<>();
-            price.putAll(equilibrium.equilibriumPrice);
+            price.putAll(marketInfo.getCurrPrices());
             marketInfo.updatePrices(price);
         } catch (ResourceCreationException e) {
             e.printStackTrace();

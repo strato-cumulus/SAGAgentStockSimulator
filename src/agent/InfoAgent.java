@@ -10,6 +10,7 @@ import resource.ResourceCreationException;
 import resource.data.FileShareCreator;
 import resource.data.ShareCreator;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -42,7 +43,10 @@ public class InfoAgent extends Agent {
                 if(random.nextGaussian() > -.5) {
                     ACLMessage message = new ACLMessage(ACLMessage.INFORM);
                     message.setOntology(Ontology.INFORMATION);
-                    message.setContent(gson.toJson(new Information(tickerCodes.get(Math.abs(random.nextInt() % tickerCodes.size())), random.nextInt() % 5)));
+                    message.setContent(gson.toJson(new Information(
+                            tickerCodes.get(Math.abs(random.nextInt() % tickerCodes.size())),
+                            random.nextInt() % 5,
+                            LocalDateTime.now())));
                     message.addReceiver(BrokerAgent.aid);
                     send(message);
                 }

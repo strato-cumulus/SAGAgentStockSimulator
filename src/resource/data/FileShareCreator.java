@@ -1,8 +1,8 @@
 package resource.data;
 
+import model.MarketInfo;
 import model.order.Order;
 import model.order.OrderType;
-import model.request.EquilibriumRequest;
 import resource.ResourceCreationException;
 
 import java.io.FileInputStream;
@@ -15,7 +15,7 @@ public final class FileShareCreator extends ShareCreator {
 
     private final String file;
     private final List<String> allStocks = new ArrayList<>();
-    private final EquilibriumRequest initialPrices = new EquilibriumRequest();
+    private final MarketInfo initialPrices = new MarketInfo();
     private final List<Order> initialSellOrders = new LinkedList<>();
 
     public FileShareCreator(String file) throws ResourceCreationException {
@@ -38,7 +38,7 @@ public final class FileShareCreator extends ShareCreator {
             try {
                 int amount = Integer.parseInt(shareData[0]);
                 int price = Integer.parseInt(shareData[1]);
-                initialPrices.equilibriumPrice.put(tickerCode, price);
+                initialPrices.addPrice(tickerCode, price);
                 initialSellOrders.add(new Order(OrderType.SELL, tickerCode, amount, price, new String("broker-0")));
             }
             catch(NumberFormatException | ArrayIndexOutOfBoundsException e) {
@@ -47,9 +47,8 @@ public final class FileShareCreator extends ShareCreator {
         }
     }
 
-    @Override
-    public EquilibriumRequest getInitialEquilibriumPrices() {
-        return this.initialPrices;
+    public MarketInfo getInitialPrices() {
+        return initialPrices;
     }
 
     @Override

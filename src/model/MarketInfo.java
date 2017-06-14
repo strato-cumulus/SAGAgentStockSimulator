@@ -4,9 +4,6 @@ import model.messagecontent.Information;
 
 import java.util.*;
 
-/**
- * Created by Marcin on 14.06.2017.
- */
 public class MarketInfo {
     private Map<String, List<Integer>> pricesHistory = new HashMap<>();
     private Map<String, Integer> prices = new HashMap<>();
@@ -29,7 +26,7 @@ public class MarketInfo {
         positivities.addAll(information);
     }
 
-    public synchronized Map<String, List<Integer>> getPricesHisotry() {
+    public synchronized Map<String, List<Integer>> getPricesHistory() {
         return pricesHistory;
     }
 

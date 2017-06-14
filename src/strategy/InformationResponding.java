@@ -5,7 +5,10 @@ import model.messagecontent.Information;
 import model.order.*;
 import model.request.EquilibriumRequest;
 
+import java.time.LocalDateTime;
 import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class InformationResponding extends Strategy {
 
@@ -16,9 +19,13 @@ public class InformationResponding extends Strategy {
         if(request.informationList.isEmpty()) {
             return null;
         }
-        request.informationList.sort(Comparator.comparingInt(o -> o.positivity));
-        Information worst = request.informationList.get(0);
-        Information best = request.informationList.get(request.informationList.size() - 1);
+        List<Information> onlyNew = request.informationList
+                .stream()
+                .filter(i -> i.localDateTime.compareTo(LocalDateTime.now()) >= 0)
+                .collect(Collectors.toList());
+        onlyNew.sort(Comparator.comparingInt(o -> o.positivity));
+        Information worst = onlyNew.get(0);
+        Information best = onlyNew.get(onlyNew.size() - 1);
         if(Comparator.<Information>comparingInt(o -> Math.abs(o.positivity)).compare(worst, best) < 0) {
             return new Order(OrderType.SELL, worst.stock, (int)Math.floor(maxPartSpent*funds/request.equilibriumPrice.get(worst.stock)), request.equilibriumPrice.get(worst.stock), sender);
         }
