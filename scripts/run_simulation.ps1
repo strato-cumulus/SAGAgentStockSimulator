@@ -2,7 +2,7 @@
 $project_path=$PSScriptRoot+"\.."
 $jade_path=$project_path+"\lib\jade.jar"
 $out_path=$project_path+"\out\production\SAGAgentStockSimulator"
-$properties_path=$project_path+"shares.properties"
+$properties_path=$project_path+"\properties\shares.properties"
 $player_class="agent.PlayerAgent"
 $broker_class="agent.BrokerAgent"
 $banker_class="agent.BankAgent"
@@ -19,7 +19,7 @@ $game_length = 100
 $stock_data = Import-Csv $properties_path -delimiter ","
 $i = 0;
 Foreach($stock in $stock_data) {
-    $agents_array.Add($stock[0] + "_" + $i + ":" + $transactionmanager_class + "(OnFallBuying, OnFallSelling, " + 0 + ")")
+    #$agents_array.Add($stock[0] + "_" + $i + ":" + $transactionmanager_class + "(OnFallBuying, OnFallSelling, " + 0 + ")")
     $i = $i + 1
 }
 

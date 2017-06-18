@@ -7,7 +7,14 @@ import java.util.*;
 public class MarketInfo {
     private Map<String, List<Integer>> pricesHistory = new HashMap<>();
     private Map<String, Integer> prices = new HashMap<>();
-    private List<Information> positivities = new ArrayList<>();
+    private List<Information> pos = new LinkedList<>();
+
+    public MarketInfo(MarketInfo marketInfo) {
+        this.prices.putAll(marketInfo.getCurrPrices());
+        this.pricesHistory.putAll(marketInfo.getPricesHistory());
+    }
+
+    public MarketInfo(){}
 
     public synchronized void addPrice(String stock, Integer price) {
         prices.put(stock, price);
@@ -22,8 +29,9 @@ public class MarketInfo {
         }
     }
 
-    public synchronized void addPositivities(List<Information> information) {
-        positivities.addAll(information);
+    public synchronized void addPositivities(List<Information> informationList) {
+        this.pos.clear();
+        this.pos.addAll(informationList);
     }
 
     public synchronized Map<String, List<Integer>> getPricesHistory() {
@@ -35,11 +43,6 @@ public class MarketInfo {
     }
 
     public synchronized List<Information> getPositivities() {
-        return positivities;
-    }
-
-    public synchronized void updatePrices(Map<String, Integer> prices) {
-        prices = new HashMap<>();
-        prices.putAll(prices);
+        return pos;
     }
 }

@@ -9,9 +9,7 @@ import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import model.Ontology;
-import model.Portfolio;
 import model.MarketInfo;
-import model.account.Account;
 import model.order.Order;
 import model.request.*;
 import model.transaction.Transaction;
@@ -19,25 +17,29 @@ import resource.data.FileShareCreator;
 import resource.data.ShareCreator;
 
 import java.io.IOException;
-import java.util.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.LinkedList;
+import java.util.List;
 
 public class BrokerAgent extends Agent {
 
-    public static final String SHARE_PATH = "C:\\Users\\filip\\Documents\\GitHub\\SAGAgentStockSimulator\\src\\shares.properties";
+    public static final String SHARE_PATH = "\\properties\\shares.properties";
+
+
     public static final AID aid = new AID("broker-0", AID.ISLOCALNAME);
 
     private MarketInfo marketInfo = new MarketInfo();
     private ShareCreator shareCreator;
+    private List<AID> players = new LinkedList<>();
     private int gameDuration;
-    private Portfolio portfolio;
-    private List<String> indexesList;
-    private Map<AID, Account> players = new HashMap<AID, Account>();
 
     private MessageTemplate equilibriumReqTemplate = MessageTemplate.MatchOntology(Ontology.EQUILIBRIUM_REQUEST);
     private MessageTemplate infoTemplate = MessageTemplate.MatchOntology(Ontology.INFORMATION);
     private MessageTemplate orderTemplate = MessageTemplate.MatchOntology(Ontology.ORDER);
     private MessageTemplate transactionTemplate = MessageTemplate.MatchOntology(Ontology.TRANSACTION);
     private MessageTemplate equilibriumInfoTemplate = MessageTemplate.MatchOntology(Ontology.EQUILIBRIUM_INFO);
+    private MessageTemplate registerPlayerTemplate = MessageTemplate.MatchOntology(Ontology.REGISTER_REQUEST);
 
     private Gson gson = new Gson();
 
@@ -52,7 +54,8 @@ public class BrokerAgent extends Agent {
             doDelete();
         }
 
-        initializeShares();
+        Path workingDir = Paths.get(System.getProperty("user.dir"));
+        initializeShares(workingDir.getParent().toString() + SHARE_PATH);
 
         //EquilibriumRequest - gracz pyta o informacje o giełdzie
         addBehaviour(new TickerBehaviour(this, 100) {
@@ -107,16 +110,30 @@ public class BrokerAgent extends Agent {
             }
         });
 
+        //rejestracja graczy
+        addBehaviour(new CyclicBehaviour() {
+            @Override
+            public void action() {
+                ACLMessage message = receive(registerPlayerTemplate);
+                if (message == null) {
+                    block();
+                } else {
+                    players.add(new AID(message.getContent(), AID.ISLOCALNAME));
+                    System.out.println("BROKER/REJESTRACJA GRACZA: " + message.getContent());
+                }
+            }
+        });
+
 
         //odbieranie orderów od graczy i przekazywanie do odpowiednich managerów
         addBehaviour(new CyclicBehaviour() {
             @Override
             public void action() {
                 ACLMessage message = receive(orderTemplate);
-                Order order = gson.fromJson(message.getContent(), Order.class);
                 if (message == null) {
                     block();
                 } else {
+                    Order order = gson.fromJson(message.getContent(), Order.class);
                     send(AgentUtil.createMessage(getAID(), message.getContent(), ACLMessage.REQUEST, Ontology.TRANSACTION, new AID(order.stock, AID.ISLOCALNAME)));
                 }
             }
@@ -149,18 +166,15 @@ public class BrokerAgent extends Agent {
         });
     }
 
-    private void initializeShares() {
+    private void initializeShares(String pathToFile) {
         try {
-            shareCreator = new FileShareCreator(SHARE_PATH);
+            shareCreator = new FileShareCreator(pathToFile);
             shareCreator.initializeShares();
-            MarketInfo info = shareCreator.getInitialPrices();
-            //TODO remove and fix strategies
-            Map<String, Integer> price = new HashMap<>();
-            price.putAll(marketInfo.getCurrPrices());
-            marketInfo.updatePrices(price);
+            marketInfo = new MarketInfo(shareCreator.getInitialMarketInfo());
         } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
 
 }

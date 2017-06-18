@@ -41,6 +41,7 @@ public class BankAgent extends Agent {
                 else {
                     AddAccountRequest request = gson.fromJson(message.getContent(), AddAccountRequest.class);
                     accounts.putIfAbsent(request.agentName, new Account(request.initialFunds));
+                    System.out.println("BANK/DODANO KONTO DLA: " + request.agentName + ", STAN: " + request.initialFunds);
                 }
             }
 

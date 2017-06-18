@@ -2,7 +2,6 @@ package resource.data;
 
 import model.MarketInfo;
 import model.order.Order;
-import model.order.OrderType;
 
 import java.io.*;
 import java.util.*;
@@ -10,9 +9,7 @@ import java.util.*;
 public final class FileShareCreator extends ShareCreator {
 
     private final String file;
-    private final Set<String> allStocks = new LinkedHashSet<>();
-    private final MarketInfo initialPrices = new MarketInfo();
-    private final List<Order> initialSellOrders = new LinkedList<>();
+    private final MarketInfo initialMarketInfo = new MarketInfo();
 
     public FileShareCreator(String file) throws IOException {
         this.file = file;
@@ -23,25 +20,23 @@ public final class FileShareCreator extends ShareCreator {
         BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
         String line;
         while((line = reader.readLine()) != null) {
+            if(line.substring(0,1).equals("#")) {
+                continue;
+            }
             String[] info = line.split(",");
-            if(info.length < 3) throw new IOException("Malformed input");
-            allStocks.add(info[0]);
-            initialSellOrders.add(new Order(OrderType.SELL, info[0], Integer.parseInt(info[1]),
-                    Integer.parseInt(info[2]), "broker-0"));
+            if (info.length < 3) {
+                throw new IOException("Malformed input");
+            }
+            initialMarketInfo.addPrice(info[0], Integer.parseInt(info[2]));
         }
     }
 
-    public MarketInfo getInitialPrices() {
-        return initialPrices;
+    public MarketInfo getInitialMarketInfo() {
+        return initialMarketInfo;
     }
 
     @Override
-    public List<Order> getInitialSellOrders() {
-        return this.initialSellOrders;
-    }
-
-    @Override
-    public Set<String> getAllStocks() {
-        return allStocks;
+    public List<String> getAllStocks() {
+        return new LinkedList<>(initialMarketInfo.getCurrPrices().keySet());
     }
 }

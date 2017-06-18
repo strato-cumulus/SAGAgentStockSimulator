@@ -10,7 +10,6 @@ import java.util.Set;
 public abstract class ShareCreator {
 
     public abstract void initializeShares() throws IOException;
-    public abstract MarketInfo getInitialPrices();
-    public abstract List<Order> getInitialSellOrders();
-    public abstract Set<String> getAllStocks();
+    public abstract MarketInfo getInitialMarketInfo();
+    public abstract List<String> getAllStocks();
 }

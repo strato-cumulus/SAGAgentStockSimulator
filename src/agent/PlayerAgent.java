@@ -47,8 +47,9 @@ public class PlayerAgent extends Agent {
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {
-                AddAccountRequest accountRequest = new AddAccountRequest(this.getAgent().getAID().getName(), Integer.parseInt((String) getArguments()[2]));
+                AddAccountRequest accountRequest = new AddAccountRequest(this.getAgent().getAID().getLocalName(), Integer.parseInt((String) getArguments()[2]));
                 send(AgentUtil.createMessage(getAID(), accountRequest,  ACLMessage.REQUEST, Ontology.ADD_ACCOUNT, bankAID));
+                send(AgentUtil.createMessage(getAID(), getAID().getLocalName(), ACLMessage.REQUEST, Ontology.REGISTER_REQUEST, brokerAID));
             }
         });
 
