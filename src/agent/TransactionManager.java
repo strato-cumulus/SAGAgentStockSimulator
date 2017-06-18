@@ -6,6 +6,7 @@ import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -26,9 +27,9 @@ public class TransactionManager extends Agent {
 
     private final List<Order> sellOrders = new LinkedList<>();
     private final List<Order> buyOrders = new LinkedList<>();
-    private MessageTemplate orderTemplate = MessageTemplate.MatchOntology(Ontology.HANDLE_ORDER);
+    private final MessageTemplate orderTemplate = MessageTemplate.MatchOntology(Ontology.HANDLE_ORDER);
+    private final MessageTemplate terminateTemplate = MessageTemplate.MatchOntology(Ontology.TERMINATE);
     private Gson gson = new Gson();
-    private String tickerId;
     private Integer initialAmount;
     private Integer initialPrice;
     private AID brokerAID;
@@ -41,9 +42,16 @@ public class TransactionManager extends Agent {
         super.setup();
         initialAmount = Integer.parseInt((String)getArguments()[0]);
         initialPrice = Integer.parseInt((String)getArguments()[1]);
-        tickerId = getArguments()[2].toString();
         brokerAID = BrokerAgent.aid;
         equilibriumPrice = initialPrice;
+
+        // rejestracja agenta u brokera
+        addBehaviour(new OneShotBehaviour() {
+            @Override
+            public void action() {
+                send(AgentUtil.createMessage(getAID(), "", ACLMessage.REQUEST, Ontology.REGISTER_REQUEST, brokerAID));
+            }
+        });
 
         //obsługa orderów
         addBehaviour(new CyclicBehaviour() {
@@ -80,14 +88,21 @@ public class TransactionManager extends Agent {
                 send(AgentUtil.createMessage(getAID(), equilibriumPrice,  ACLMessage.INFORM, Ontology.EQUILIBRIUM_INFO, brokerAID));
             }
         });
+
+        //oczekiwanie na zakończenie symulacji
+        addBehaviour(new CyclicBehaviour() {
+            @Override
+            public void action() {
+                ACLMessage message = receive(terminateTemplate);
+                if (message == null) {
+                    block();
+                } else {
+                    doDelete();
+                }
+            }
+        });
     }
 
-
-
-    @Override
-    public void addBehaviour(Behaviour b) {
-        super.addBehaviour(b);
-    }
 
     //sprawdza i jeżeli może wykonuje transakcję - jeżeli dokonano transakcji zwraca 1, jeżeli nie to odkłada order do kolejki i zwraca 0
     private boolean tradeBuyOrder(Order buyOrder) {

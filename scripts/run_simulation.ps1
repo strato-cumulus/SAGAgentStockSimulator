@@ -14,13 +14,11 @@ $agents_array = [System.Collections.ArrayList]@()
 $min_funds = 2000
 $max_funds = 3000
 
-$game_length = 100
+$game_length = 10000
 
-$stock_data = Import-Csv $properties_path -delimiter ","
-$i = 0;
+$stock_data = Import-Csv -Header stock,amount,price $properties_path -delimiter ","
 Foreach($stock in $stock_data) {
-    #$agents_array.Add($stock[0] + "_" + $i + ":" + $transactionmanager_class + "(OnFallBuying, OnFallSelling, " + 0 + ")")
-    $i = $i + 1
+    $agents_array.Add($stock.stock + ":" + $transactionmanager_class + "(" + $stock.amount + "," + $stock.price  + ")")
 }
 
 $agents_names=@(

@@ -5,6 +5,8 @@ import com.google.gson.Gson;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import model.Ontology;
@@ -21,16 +23,27 @@ public class BankAgent extends Agent {
 
     public static final AID aid = new AID("bank-0", AID.ISLOCALNAME);
     private Gson gson = new Gson();
-
+    private AID brokerAID;
     private final MessageTemplate addAccountTemplate = MessageTemplate.MatchOntology(Ontology.ADD_ACCOUNT);
     private final MessageTemplate checkFundsTemplate = MessageTemplate.MatchOntology(Ontology.CHECK_FUNDS);
     private final MessageTemplate blockFundsTemplate = MessageTemplate.and(MessageTemplate.MatchSender(BrokerAgent.aid), MessageTemplate.MatchOntology(Ontology.BLOCK_FUNDS));
     private final MessageTemplate transferTemplate = MessageTemplate.and(MessageTemplate.MatchSender(BrokerAgent.aid), MessageTemplate.MatchOntology(Ontology.TRANSFER));
+    private final MessageTemplate terminateTemplate = MessageTemplate.MatchOntology(Ontology.TERMINATE);
 
     private Map<String, Account> accounts = new HashMap<>();
 
     @Override
     public void setup() {
+        super.setup();
+        brokerAID = BrokerAgent.aid;
+
+        // rejestracja agenta u brokera
+        addBehaviour(new OneShotBehaviour() {
+            @Override
+            public void action() {
+                send(AgentUtil.createMessage(getAID(), "", ACLMessage.REQUEST, Ontology.REGISTER_REQUEST, brokerAID));
+            }
+        });
 
         // Add account
         addBehaviour(new Behaviour() {
@@ -41,7 +54,7 @@ public class BankAgent extends Agent {
                 else {
                     AddAccountRequest request = gson.fromJson(message.getContent(), AddAccountRequest.class);
                     accounts.putIfAbsent(request.agentName, new Account(request.initialFunds));
-                    System.out.println("BANK/DODANO KONTO DLA: " + request.agentName + ", STAN: " + request.initialFunds);
+                    System.out.println("BANK/DODANO KONTO DLA: \t\t" + request.agentName + ", STAN: " + request.initialFunds);
                 }
             }
 
@@ -119,6 +132,19 @@ public class BankAgent extends Agent {
             @Override
             public boolean done() {
                 return false;
+            }
+        });
+
+        //oczekiwanie na zakończenie symulacji
+        addBehaviour(new CyclicBehaviour() {
+            @Override
+            public void action() {
+                ACLMessage message = receive(terminateTemplate);
+                if (message == null) {
+                    block();
+                } else {
+                    doDelete();
+                }
             }
         });
     }

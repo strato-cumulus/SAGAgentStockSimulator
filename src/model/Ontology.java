@@ -15,5 +15,6 @@ public class Ontology {
     public static final String ADD_STOCKS = "add_stocks";
     public static final String TRANSFER = "transfer";
     public static final String REGISTER_REQUEST = "rehister-request";
+    public static final String TERMINATE = "terminate";
 }
 

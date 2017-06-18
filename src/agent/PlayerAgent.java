@@ -31,9 +31,10 @@ public class PlayerAgent extends Agent {
     private Order sellOrder;
     private Order buyOrder;
     private final Map<String, Integer> stocks = new HashMap<>();
-    private MessageTemplate equilibriumResTemplate = MessageTemplate.MatchOntology(Ontology.EQUILIBRIUM_RESPONSE);
+    private final MessageTemplate equilibriumResTemplate = MessageTemplate.MatchOntology(Ontology.EQUILIBRIUM_RESPONSE);
     private final MessageTemplate checkFundsTemplate = MessageTemplate.MatchOntology(Ontology.CHECK_FUNDS);
     private final MessageTemplate addStocksTemplate = MessageTemplate.MatchOntology(Ontology.ADD_STOCKS);
+    private final MessageTemplate terminateTemplate = MessageTemplate.MatchOntology(Ontology.TERMINATE);
 
     @Override
     protected void setup() {
@@ -44,12 +45,13 @@ public class PlayerAgent extends Agent {
         sellStrategy = Strategy.fromString((String) getArguments()[1]);
         readyToTrade = false;
 
+        // rejestracja w banku i u brokera
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {
                 AddAccountRequest accountRequest = new AddAccountRequest(this.getAgent().getAID().getLocalName(), Integer.parseInt((String) getArguments()[2]));
                 send(AgentUtil.createMessage(getAID(), accountRequest,  ACLMessage.REQUEST, Ontology.ADD_ACCOUNT, bankAID));
-                send(AgentUtil.createMessage(getAID(), getAID().getLocalName(), ACLMessage.REQUEST, Ontology.REGISTER_REQUEST, brokerAID));
+                send(AgentUtil.createMessage(getAID(), "", ACLMessage.REQUEST, Ontology.REGISTER_REQUEST, brokerAID));
             }
         });
 
@@ -145,6 +147,19 @@ public class PlayerAgent extends Agent {
                     }
 
                 });
+            }
+        });
+
+        //oczekiwanie na zakończenie symulacji
+        addBehaviour(new CyclicBehaviour() {
+            @Override
+            public void action() {
+                ACLMessage message = receive(terminateTemplate);
+                if (message == null) {
+                    block();
+                } else {
+                    doDelete();
+                }
             }
         });
     }

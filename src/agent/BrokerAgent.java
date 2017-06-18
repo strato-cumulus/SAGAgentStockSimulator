@@ -31,7 +31,7 @@ public class BrokerAgent extends Agent {
 
     private MarketInfo marketInfo = new MarketInfo();
     private ShareCreator shareCreator;
-    private List<AID> players = new LinkedList<>();
+    private List<AID> agents = new LinkedList<>();
     private int gameDuration;
 
     private MessageTemplate equilibriumReqTemplate = MessageTemplate.MatchOntology(Ontology.EQUILIBRIUM_REQUEST);
@@ -39,7 +39,7 @@ public class BrokerAgent extends Agent {
     private MessageTemplate orderTemplate = MessageTemplate.MatchOntology(Ontology.ORDER);
     private MessageTemplate transactionTemplate = MessageTemplate.MatchOntology(Ontology.TRANSACTION);
     private MessageTemplate equilibriumInfoTemplate = MessageTemplate.MatchOntology(Ontology.EQUILIBRIUM_INFO);
-    private MessageTemplate registerPlayerTemplate = MessageTemplate.MatchOntology(Ontology.REGISTER_REQUEST);
+    private MessageTemplate registerAgentTemplate = MessageTemplate.MatchOntology(Ontology.REGISTER_REQUEST);
 
     private Gson gson = new Gson();
 
@@ -56,6 +56,18 @@ public class BrokerAgent extends Agent {
 
         Path workingDir = Paths.get(System.getProperty("user.dir"));
         initializeShares(workingDir.getParent().toString() + SHARE_PATH);
+
+        //Nadzór nad symulacją, po odpowiednim czasie koniec
+        addBehaviour(new TickerBehaviour(this, 100) {
+            @Override
+            public void onTick() {
+                if (getTickCount() > gameDuration/100) {
+                    send(AgentUtil.createMessage(getAID(), "", ACLMessage.REQUEST, Ontology.TERMINATE, agents.toArray(new AID[agents.size()])));
+                    System.out.println("KONIEC SYMULACJI");
+                    doDelete();
+                }
+            }
+        });
 
         //EquilibriumRequest - gracz pyta o informacje o giełdzie
         addBehaviour(new TickerBehaviour(this, 100) {
@@ -110,16 +122,16 @@ public class BrokerAgent extends Agent {
             }
         });
 
-        //rejestracja graczy
+        //rejestracja wszystkich agentów ze środowiska
         addBehaviour(new CyclicBehaviour() {
             @Override
             public void action() {
-                ACLMessage message = receive(registerPlayerTemplate);
+                ACLMessage message = receive(registerAgentTemplate);
                 if (message == null) {
                     block();
                 } else {
-                    players.add(new AID(message.getContent(), AID.ISLOCALNAME));
-                    System.out.println("BROKER/REJESTRACJA GRACZA: " + message.getContent());
+                    agents.add(new AID(message.getSender().getLocalName(), AID.ISLOCALNAME));
+                    System.out.println("BROKER/REJESTRACJA AGENTA: \t" + message.getSender().getLocalName());
                 }
             }
         });
