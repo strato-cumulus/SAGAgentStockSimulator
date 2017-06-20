@@ -21,6 +21,7 @@ import java.util.Map;
 
 public class BankAgent extends Agent {
 
+    public static final int DEFAULT_CYCLE_WAIT = 500;
     public static final AID aid = new AID("bank-0", AID.ISLOCALNAME);
     private Gson gson = new Gson();
     private AID brokerAID;
@@ -46,7 +47,7 @@ public class BankAgent extends Agent {
         });
 
         // Add account
-        addBehaviour(new Behaviour() {
+        addBehaviour(new CyclicBehaviour() {
             @Override
             public void action() {
                 ACLMessage message = receive(addAccountTemplate);
@@ -56,11 +57,6 @@ public class BankAgent extends Agent {
                     accounts.putIfAbsent(request.agentName, new Account(request.initialFunds));
                     System.out.println("BANK/DODANO KONTO DLA: \t\t" + request.agentName + ", STAN: " + request.initialFunds);
                 }
-            }
-
-            @Override
-            public boolean done() {
-                return false;
             }
         });
 

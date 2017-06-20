@@ -43,7 +43,7 @@ public class Order {
         public int compare(Order o1, Order o2) {
             Integer price1 = o1.unitPrice;
             Integer price2 = o2.unitPrice;
-            if(price1 == price2) {
+            if(price1.equals(price2)) {
                 LocalDateTime time1 = o1.getArrivalTime();
                 LocalDateTime time2 = o2.getArrivalTime();
                 return time1.compareTo(time2);

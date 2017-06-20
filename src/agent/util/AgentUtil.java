@@ -15,7 +15,7 @@ public class AgentUtil {
         message.setSender(senderAID);
         message.setOntology(ontology);
         Arrays.asList(receiverAIDs).forEach(message::addReceiver);
-        message.setContent(gson.toJson(messageObject));
+        message.setContent(messageObject != null? gson.toJson(messageObject): "");
         return message;
     }
 }

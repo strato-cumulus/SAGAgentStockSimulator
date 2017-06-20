@@ -87,16 +87,24 @@ public class PlayerAgent extends Agent {
         addBehaviour(new CyclicBehaviour() {
             @Override
             public void action() {
-                if (readyToTrade == true) {
+                if (readyToTrade) {
                     System.out.println("ReadyToTrade");
                     ACLMessage buyMessage = AgentUtil.createMessage(getAID(), buyOrder, ACLMessage.REQUEST, Ontology.ORDER);
                     ACLMessage sellMessage = AgentUtil.createMessage(getAID(), sellOrder, ACLMessage.REQUEST, Ontology.ORDER);
                     send(buyMessage);
                     send(sellMessage);
                     // pobranie akcji, na które zostało wystawione zlecenie sprzedaży
-                    int currentQuantity = stocks.get(sellOrder.stock);
-                    stocks.put(sellOrder.stock, currentQuantity - sellOrder.getQuantity());
-                    readyToTrade = false;
+                    if(sellOrder != null && stocks.containsKey(sellOrder.stock)) {
+                        int currentQuantity = stocks.get(sellOrder.stock);
+                        stocks.put(sellOrder.stock, currentQuantity - sellOrder.getQuantity());
+                        readyToTrade = false;
+                    }
+                    else {
+                        block();
+                    }
+                }
+                else {
+                    block();
                 }
             }
         });
@@ -123,9 +131,9 @@ public class PlayerAgent extends Agent {
         });
 
         //CheckFunds
-        addBehaviour(new CyclicBehaviour() {
+        addBehaviour(new TickerBehaviour(this, 5000) {
             @Override
-            public void action() {
+            public void onTick() {
                 ACLMessage queryMessage = AgentUtil.createMessage(getAID(), new CheckFundsRequest(this.getAgent().getAID().getName(), 0,0),  ACLMessage.REQUEST, Ontology.FUNDS_REQUEST, bankAID);
                 send(queryMessage);
                 addBehaviour(new Behaviour() {
