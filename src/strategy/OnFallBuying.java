@@ -7,6 +7,7 @@ import model.request.EquilibriumRequest;
 import strategy.util.BiggestRiseComparator;
 
 import java.util.List;
+import java.util.Random;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -18,10 +19,9 @@ public class OnFallBuying extends Strategy {
     public Order perform(ACLMessage message, int funds) {
         EquilibriumRequest request = unpack(message);
         //TODO fix this
-//        SortedMap<String, List<Integer>> map = new TreeMap<>((s1, s2) ->
-//                comparator.reverseCompare(request.historicalEquilibriumPrice.get(s1), request.historicalEquilibriumPrice.get(s2)));
-        SortedMap<String, List<Integer>> map = new TreeMap<>();
+        SortedMap<String, List<Integer>> map = new TreeMap<>((s1, s2) ->
+                comparator.reverseCompare(request.historicalEquilibriumPrice.get(s1), request.historicalEquilibriumPrice.get(s2)));
         map.putAll(request.historicalEquilibriumPrice);
-        return new Order(OrderType.BUY, map.firstKey(), (int)Math.floor(maxPartSpent*funds/request.equilibriumPrice.get(map.firstKey())), 1, message.getAllReceiver().next().toString());
+        return new Order(OrderType.BUY, map.firstKey(), Math.max((int)Math.floor(maxPartSpent*funds/request.equilibriumPrice.get(map.firstKey())), (new Random()).nextInt()%5), 1, message.getAllReceiver().next().toString());
     }
 }

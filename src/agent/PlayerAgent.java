@@ -17,6 +17,7 @@ import strategy.Strategy;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 public class PlayerAgent extends Agent {
 
@@ -55,8 +56,10 @@ public class PlayerAgent extends Agent {
             }
         });
 
+        Random random = new Random();
+
         //EquilibriumRequest
-        addBehaviour(new TickerBehaviour(this, 5000) {
+        addBehaviour(new TickerBehaviour(this, 5000 + Math.abs(random.nextInt()) * 100 % 5000) {
             @Override
             public void onTick() {
                 ACLMessage queryMessage = AgentUtil.createMessage(getAID(), new EquilibriumRequest(),  ACLMessage.REQUEST, Ontology.EQUILIBRIUM_REQUEST, brokerAID);
@@ -88,13 +91,21 @@ public class PlayerAgent extends Agent {
             @Override
             public void action() {
                 if (readyToTrade) {
-                    System.out.println("ReadyToTrade");
                     ACLMessage buyMessage = AgentUtil.createMessage(getAID(), buyOrder, ACLMessage.REQUEST, Ontology.ORDER);
                     ACLMessage sellMessage = AgentUtil.createMessage(getAID(), sellOrder, ACLMessage.REQUEST, Ontology.ORDER);
-                    send(buyMessage);
-                    send(sellMessage);
+                    buyMessage.addReceiver(BrokerAgent.aid);
+                    sellMessage.addReceiver(BrokerAgent.aid);
+                    if(buyOrder != null) {
+                        send(buyMessage);
+                        System.out.println("Agent " + getAID().getLocalName() + " wants to buy " + buyOrder.getQuantity() + " of " + buyOrder.stock);
+                    }
+                    if(sellOrder != null) {
+                        send(sellMessage);
+                        System.out.println("Agent " + getAID().getLocalName() + " wants to sell " + sellOrder.getQuantity() + " of " + sellOrder.stock);
+                    }
                     // pobranie akcji, na które zostało wystawione zlecenie sprzedaży
                     if(sellOrder != null && stocks.containsKey(sellOrder.stock)) {
+                        System.out.println("Agent " + getAID() + " wants to sell " + sellOrder.getQuantity() + " of " + sellOrder.stock + " for " + sellOrder.unitPrice + " per share");
                         int currentQuantity = stocks.get(sellOrder.stock);
                         stocks.put(sellOrder.stock, currentQuantity - sellOrder.getQuantity());
                         readyToTrade = false;

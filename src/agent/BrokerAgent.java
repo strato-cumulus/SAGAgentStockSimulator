@@ -146,7 +146,9 @@ public class BrokerAgent extends Agent {
                     block();
                 } else {
                     Order order = gson.fromJson(message.getContent(), Order.class);
-                    send(AgentUtil.createMessage(getAID(), message.getContent(), ACLMessage.REQUEST, Ontology.TRANSACTION, new AID(order.stock, AID.ISLOCALNAME)));
+                    if(order != null) {
+                        send(AgentUtil.createMessage(getAID(), message.getContent(), ACLMessage.REQUEST, Ontology.TRANSACTION, new AID(order.stock, AID.ISLOCALNAME)));
+                    }
                 }
             }
         });

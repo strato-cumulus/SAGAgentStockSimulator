@@ -60,17 +60,23 @@ public class TransactionManager extends Agent {
                 ACLMessage message = receive(orderTemplate);
                 if (message == null) {
                     block();
-                } else {
+                } else if(currentTransaction != null) {
                     Order order = gson.fromJson(message.getContent(), Order.class);
-                    order.setArrivalTime(LocalDateTime.now());
-                    if(order.type == OrderType.BUY) {
-                        if (tradeBuyOrder(order) == true) {
-                            send(AgentUtil.createMessage(getAID(), currentTransaction, ACLMessage.REQUEST, Ontology.TRANSACTION, BrokerAgent.aid));
-                        }
+                    if(order == null) {
+                        block();
                     }
-                    if (order.type == OrderType.SELL) {
-                        if (tradeSellOrder(order) == true) {
-                            send(AgentUtil.createMessage(getAID(), currentTransaction, ACLMessage.REQUEST, Ontology.TRANSACTION, BrokerAgent.aid));
+                    else {
+                        order.setArrivalTime(LocalDateTime.now());
+                        System.out.println("Order received from " + order.playerName + " for " + order.getQuantity() + " of " + order.stock);
+                        if (order.type == OrderType.BUY) {
+                            if (tradeBuyOrder(order)) {
+                                send(AgentUtil.createMessage(getAID(), currentTransaction, ACLMessage.REQUEST, Ontology.TRANSACTION, BrokerAgent.aid));
+                            }
+                        }
+                        if (order.type == OrderType.SELL) {
+                            if (tradeSellOrder(order)) {
+                                send(AgentUtil.createMessage(getAID(), currentTransaction, ACLMessage.REQUEST, Ontology.TRANSACTION, BrokerAgent.aid));
+                            }
                         }
                     }
                 }
