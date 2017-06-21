@@ -33,7 +33,7 @@ public class PlayerAgent extends Agent {
     private Order buyOrder;
     private final Map<String, Integer> stocks = new HashMap<>();
     private final MessageTemplate equilibriumResTemplate = MessageTemplate.MatchOntology(Ontology.EQUILIBRIUM_RESPONSE);
-    private final MessageTemplate checkFundsTemplate = MessageTemplate.MatchOntology(Ontology.CHECK_FUNDS);
+    private final MessageTemplate fundsResponseTemplate = MessageTemplate.MatchOntology(Ontology.FUNDS_RESPONSE);
     private final MessageTemplate addStocksTemplate = MessageTemplate.MatchOntology(Ontology.ADD_STOCKS);
     private final MessageTemplate terminateTemplate = MessageTemplate.MatchOntology(Ontology.TERMINATE);
 
@@ -71,8 +71,10 @@ public class PlayerAgent extends Agent {
                         ACLMessage response = receive(equilibriumResTemplate);
                         if(response == null) block();
                         else {
-                            buyOrder = buyStrategy.perform(response, clear);
-                            sellOrder = sellStrategy.perform(response, clear);
+                            checkFunds();
+                            buyOrder = buyStrategy.perform(response, clear, getAID().getLocalName(), stocks);
+                            checkFunds();
+                            sellOrder = sellStrategy.perform(response, clear, getAID().getLocalName(), stocks);
                             readyToTrade = true;
                             done = true;
                         }
@@ -97,15 +99,14 @@ public class PlayerAgent extends Agent {
                     sellMessage.addReceiver(BrokerAgent.aid);
                     if(buyOrder != null) {
                         send(buyMessage);
-                        System.out.println("Agent " + getAID().getLocalName() + " wants to buy " + buyOrder.getQuantity() + " of " + buyOrder.stock);
+                        //System.out.println("Agent " + getAID().getLocalName() + " wants to buy " + buyOrder.getQuantity() + " of " + buyOrder.stock);
                     }
                     if(sellOrder != null) {
                         send(sellMessage);
-                        System.out.println("Agent " + getAID().getLocalName() + " wants to sell " + sellOrder.getQuantity() + " of " + sellOrder.stock);
+                        //System.out.println("Agent " + getAID().getLocalName() + " wants to sell " + sellOrder.getQuantity() + " of " + sellOrder.stock);
                     }
                     // pobranie akcji, na które zostało wystawione zlecenie sprzedaży
                     if(sellOrder != null && stocks.containsKey(sellOrder.stock)) {
-                        System.out.println("Agent " + getAID() + " wants to sell " + sellOrder.getQuantity() + " of " + sellOrder.stock + " for " + sellOrder.unitPrice + " per share");
                         int currentQuantity = stocks.get(sellOrder.stock);
                         stocks.put(sellOrder.stock, currentQuantity - sellOrder.getQuantity());
                         readyToTrade = false;
@@ -113,6 +114,7 @@ public class PlayerAgent extends Agent {
                     else {
                         block();
                     }
+                    readyToTrade = false;
                 }
                 else {
                     block();
@@ -141,33 +143,33 @@ public class PlayerAgent extends Agent {
             }
         });
 
-        //CheckFunds
-        addBehaviour(new TickerBehaviour(this, 5000) {
-            @Override
-            public void onTick() {
-                ACLMessage queryMessage = AgentUtil.createMessage(getAID(), new CheckFundsRequest(this.getAgent().getAID().getName(), 0,0),  ACLMessage.REQUEST, Ontology.FUNDS_REQUEST, bankAID);
-                send(queryMessage);
-                addBehaviour(new Behaviour() {
-                    boolean done = false;
-                    @Override
-                    public void action() {
-                        ACLMessage response = receive(checkFundsTemplate);
-                        if(response == null) block();
-                        else {
-                            CheckFundsRequest fundsResponse = gson.fromJson(response.getContent(), CheckFundsRequest.class);
-                            funds = fundsResponse.funds;
-                            clear = fundsResponse.clear;
-                            done = true;
-                        }
-                    }
-                    @Override
-                    public boolean done() {
-                        return done;
-                    }
-
-                });
-            }
-        });
+//        //CheckFunds
+//        addBehaviour(new TickerBehaviour(this, 5000) {
+//            @Override
+//            public void onTick() {
+//                ACLMessage queryMessage = AgentUtil.createMessage(getAID(), new CheckFundsRequest(this.getAgent().getAID().getName(), 0,0),  ACLMessage.REQUEST, Ontology.FUNDS_REQUEST, bankAID);
+//                send(queryMessage);
+//                addBehaviour(new Behaviour() {
+//                    boolean done = false;
+//                    @Override
+//                    public void action() {
+//                        ACLMessage response = receive(checkFundsTemplate);
+//                        if(response == null) block();
+//                        else {
+//                            CheckFundsRequest fundsResponse = gson.fromJson(response.getContent(), CheckFundsRequest.class);
+//                            funds = fundsResponse.funds;
+//                            clear = fundsResponse.clear;
+//                            done = true;
+//                        }
+//                    }
+//                    @Override
+//                    public boolean done() {
+//                        return done;
+//                    }
+//
+//                });
+//            }
+//        });
 
         //oczekiwanie na zakończenie symulacji
         addBehaviour(new CyclicBehaviour() {
@@ -179,6 +181,30 @@ public class PlayerAgent extends Agent {
                 } else {
                     doDelete();
                 }
+            }
+        });
+    }
+
+
+    private void checkFunds() {
+        ACLMessage queryMessage = AgentUtil.createMessage(getAID(), new CheckFundsRequest(getAID().getLocalName(), 0,0),  ACLMessage.REQUEST, Ontology.CHECK_FUNDS, bankAID);
+        send(queryMessage);
+        addBehaviour(new Behaviour() {
+            boolean done = false;
+            @Override
+            public void action() {
+                ACLMessage response = receive(fundsResponseTemplate);
+                if(response == null) block();
+                else {
+                    CheckFundsRequest fundsResponse = gson.fromJson(response.getContent(), CheckFundsRequest.class);
+                    funds = fundsResponse.funds;
+                    clear = fundsResponse.clear;
+                    done = true;
+                }
+            }
+            @Override
+            public boolean done() {
+                return done;
             }
         });
     }

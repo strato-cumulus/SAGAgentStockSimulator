@@ -1,7 +1,7 @@
 package model;
 
 public class Ontology {
-    public static final String FUNDS_REQUEST = "funds-request";
+    public static final String FUNDS_RESPONSE = "funds-request";
     public static final String ORDER = "order";
     public static final String HANDLE_ORDER = "order";
     public static final String CHECK_FUNDS = "check-funds";

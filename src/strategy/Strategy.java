@@ -7,9 +7,12 @@ import model.Ontology;
 import model.order.Order;
 import model.request.EquilibriumRequest;
 
+import java.util.Map;
+
 public abstract class Strategy {
 
     protected static final double maxPartSpent = .1;
+    protected static final double maxQuantitySell = .8;
     private MessageTemplate strategyMessageTemplate = MessageTemplate.MatchOntology(Ontology.EQUILIBRIUM_REQUEST);
     private Gson gson = new Gson();
 
@@ -34,7 +37,7 @@ public abstract class Strategy {
         return message;
     }
 
-    public abstract Order perform(ACLMessage message, int funds);
+    public abstract Order perform(ACLMessage message, int funds, String player,  Map<String, Integer> stocks);
 
     protected EquilibriumRequest unpack(ACLMessage message) {
         return gson.fromJson(message.getContent(), EquilibriumRequest.class);

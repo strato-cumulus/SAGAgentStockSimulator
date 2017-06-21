@@ -147,7 +147,7 @@ public class BrokerAgent extends Agent {
                 } else {
                     Order order = gson.fromJson(message.getContent(), Order.class);
                     if(order != null) {
-                        send(AgentUtil.createMessage(getAID(), message.getContent(), ACLMessage.REQUEST, Ontology.TRANSACTION, new AID(order.stock, AID.ISLOCALNAME)));
+                        send(AgentUtil.createMessage(getAID(), order, ACLMessage.REQUEST, Ontology.HANDLE_ORDER, new AID(order.stock, AID.ISLOCALNAME)));
                     }
                 }
             }
@@ -162,7 +162,6 @@ public class BrokerAgent extends Agent {
                     block();
                 } else {
                     Transaction transaction = gson.fromJson(message.getContent(), Transaction.class);
-
                     MoneyTransferRequest moneyTransferRequest = new MoneyTransferRequest(
                             transaction.buyerName,
                             transaction.sellerName,

@@ -11,10 +11,10 @@ $class_path = $jade_path + ";" + $out_path + ";" + $project_path+"\lib\gson-2.8.
 $container_name = "Stock market"
 $agents_array = [System.Collections.ArrayList]@()
 
-$min_funds = 2000
-$max_funds = 3000
+$min_funds = 10000000
+$max_funds = 20000000
 
-$game_length = 10000
+$game_length = 60000
 
 $stock_data = Import-Csv -Header stock,amount,price $properties_path -delimiter ","
 Foreach($stock in $stock_data) {

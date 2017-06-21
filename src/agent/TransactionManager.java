@@ -4,7 +4,6 @@ import agent.util.AgentUtil;
 import com.google.gson.Gson;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.TickerBehaviour;
@@ -27,13 +26,12 @@ public class TransactionManager extends Agent {
 
     private final List<Order> sellOrders = new LinkedList<>();
     private final List<Order> buyOrders = new LinkedList<>();
-    private final MessageTemplate orderTemplate = MessageTemplate.MatchOntology(Ontology.HANDLE_ORDER);
+    private final MessageTemplate handleOrderTemplate = MessageTemplate.MatchOntology(Ontology.HANDLE_ORDER);
     private final MessageTemplate terminateTemplate = MessageTemplate.MatchOntology(Ontology.TERMINATE);
     private Gson gson = new Gson();
     private Integer initialAmount;
     private Integer initialPrice;
     private AID brokerAID;
-    private Transaction currentTransaction;
     private Integer equilibriumPrice;
 
 
@@ -42,6 +40,7 @@ public class TransactionManager extends Agent {
         super.setup();
         initialAmount = Integer.parseInt((String)getArguments()[0]);
         initialPrice = Integer.parseInt((String)getArguments()[1]);
+        sellOrders.add(new Order(OrderType.SELL, getAID().getLocalName(), initialAmount, initialPrice, getAID().getLocalName()));
         brokerAID = BrokerAgent.aid;
         equilibriumPrice = initialPrice;
 
@@ -57,25 +56,30 @@ public class TransactionManager extends Agent {
         addBehaviour(new CyclicBehaviour() {
             @Override
             public void action() {
-                ACLMessage message = receive(orderTemplate);
+                ACLMessage message = receive(handleOrderTemplate);
                 if (message == null) {
                     block();
-                } else if(currentTransaction != null) {
+                } else {
                     Order order = gson.fromJson(message.getContent(), Order.class);
                     if(order == null) {
                         block();
                     }
                     else {
                         order.setArrivalTime(LocalDateTime.now());
-                        System.out.println("Order received from " + order.playerName + " for " + order.getQuantity() + " of " + order.stock);
                         if (order.type == OrderType.BUY) {
-                            if (tradeBuyOrder(order)) {
-                                send(AgentUtil.createMessage(getAID(), currentTransaction, ACLMessage.REQUEST, Ontology.TRANSACTION, BrokerAgent.aid));
+                            System.out.println("Buy order from " + order.playerName + ", stock: " + order.stock  + ", quantity: " + order.getQuantity() + ", price: " + order.unitPrice);
+                            Transaction transaction = tradeBuyOrder(order);
+                            if (transaction != null) {
+                                System.out.println("TRANSACTION");
+                                send(AgentUtil.createMessage(getAID(), transaction, ACLMessage.REQUEST, Ontology.TRANSACTION, BrokerAgent.aid));
                             }
                         }
                         if (order.type == OrderType.SELL) {
-                            if (tradeSellOrder(order)) {
-                                send(AgentUtil.createMessage(getAID(), currentTransaction, ACLMessage.REQUEST, Ontology.TRANSACTION, BrokerAgent.aid));
+                            System.out.println("Sell order from " + order.playerName + ", stock: " + order.stock  + ", quantity: " + order.getQuantity() + ", price: " + order.unitPrice);
+                            Transaction transaction = tradeSellOrder(order);
+                            if (transaction != null) {
+                                send(AgentUtil.createMessage(getAID(), transaction, ACLMessage.REQUEST, Ontology.TRANSACTION, BrokerAgent.aid));
+                                System.out.println("TRANSACTION");
                             }
                         }
                     }
@@ -111,7 +115,8 @@ public class TransactionManager extends Agent {
 
 
     //sprawdza i jeżeli może wykonuje transakcję - jeżeli dokonano transakcji zwraca 1, jeżeli nie to odkłada order do kolejki i zwraca 0
-    private boolean tradeBuyOrder(Order buyOrder) {
+    private Transaction tradeBuyOrder(Order buyOrder) {
+        Transaction transaction = null;
         String buyerName;
         String sellerName;
         String stock;
@@ -127,49 +132,47 @@ public class TransactionManager extends Agent {
                 stock = sellOrder.stock;
                 if(sellOrder.getQuantity() == buyOrder.getQuantity()) {
                     transactionQuantity = buyOrder.getQuantity();
-                    currentTransaction = new Transaction(buyerName, sellerName, stock, transactionQuantity, transactionPrice, offerPrice);
+                    transaction = new Transaction(buyerName, sellerName, stock, transactionQuantity, transactionPrice, offerPrice);
                     sellOrder.setQuantity(0);
                     buyOrder.setQuantity(0);
                     break;
                 }
                 else if (sellOrder.getQuantity() > buyOrder.getQuantity()) {
                     transactionQuantity = buyOrder.getQuantity();
-                    currentTransaction = new Transaction(buyerName, sellerName, stock, transactionQuantity, transactionPrice, offerPrice);
+                    transaction = new Transaction(buyerName, sellerName, stock, transactionQuantity, transactionPrice, offerPrice);
                     sellOrder.setQuantity(sellOrder.getQuantity() - transactionQuantity);
                     buyOrder.setQuantity(0);
                     break;
                 }
                 else {
                     transactionQuantity = sellOrder.getQuantity();
-                    currentTransaction = new Transaction(buyerName, sellerName, stock, transactionQuantity, transactionPrice, offerPrice);
+                    transaction = new Transaction(buyerName, sellerName, stock, transactionQuantity, transactionPrice, offerPrice);
                     sellOrders.remove(sellOrder);
                     sellOrder.setQuantity(0);
                     buyOrder.setQuantity(buyOrder.getQuantity() - transactionQuantity);
                 }
+                Iterator<Order> iterator = sellOrders.iterator();
+                while(iterator.hasNext()) {
+                    if(iterator.next().getQuantity() == 0) {
+                        iterator.remove();
+                    }
+                }
             }
-        }
-        Iterator<Order> iterator = sellOrders.iterator();
-        while(iterator.hasNext()) {
-            if(iterator.next().getQuantity() == 0) {
-                iterator.remove();
-            }
-        }
-        if(buyOrder.getQuantity() > 0 && buyOrder.getQuantity() < initialQuantity) {
-            buyOrders.add(buyOrder);
-            buyOrders.sort(Order.BuyOrderComparator);
-            return true;
-        }
-        if(buyOrder.getQuantity() == 0) {
-            return true;
         }
         if(buyOrder.getQuantity() == initialQuantity){
-            return false;
+            return null;
+        } else {
+            if (buyOrder.getQuantity() > 0 && buyOrder.getQuantity() < initialQuantity) {
+                buyOrders.add(buyOrder);
+                buyOrders.sort(Order.BuyOrderComparator);
+            }
+            return transaction;
         }
-        return false;
     }
 
     //sprawdza i jeżeli może wykonuje transakcję - jeżeli dokonano transakcji zwraca 1, jeżeli nie to odkłada order do kolejki i zwraca 0
-    private boolean tradeSellOrder(Order sellOrder) {
+    private Transaction tradeSellOrder(Order sellOrder) {
+        Transaction transaction = null;
         String buyerName;
         String sellerName;
         String stock;
@@ -186,44 +189,41 @@ public class TransactionManager extends Agent {
                 offerPrice = buyOrder.unitPrice;
                 if(buyOrder.getQuantity() == sellOrder.getQuantity()) {
                     transactionQuantity = sellOrder.getQuantity();
-                    currentTransaction = new Transaction(buyerName, sellerName, stock, transactionQuantity, transactionPrice, offerPrice);
+                    transaction = new Transaction(buyerName, sellerName, stock, transactionQuantity, transactionPrice, offerPrice);
                     buyOrder.setQuantity(0);
                     sellOrder.setQuantity(0);
                     break;
                 }
                 else if(buyOrder.getQuantity() > sellOrder.getQuantity()) {
                     transactionQuantity = sellOrder.getQuantity();
-                    currentTransaction = new Transaction(buyerName, sellerName, stock, transactionQuantity, transactionPrice, offerPrice);
+                    transaction = new Transaction(buyerName, sellerName, stock, transactionQuantity, transactionPrice, offerPrice);
                     buyOrder.setQuantity(buyOrder.getQuantity() - transactionQuantity);
                     sellOrder.setQuantity(0);
                     break;
                 }
                 else {
                     transactionQuantity = buyOrder.getQuantity();
-                    currentTransaction = new Transaction(buyerName, sellerName, stock, transactionQuantity, transactionPrice, offerPrice);
+                    transaction = new Transaction(buyerName, sellerName, stock, transactionQuantity, transactionPrice, offerPrice);
                     buyOrder.setQuantity(0);
                     sellOrder.setQuantity(sellOrder.getQuantity() - transactionQuantity);
                 }
+                Iterator<Order> iterator = buyOrders.iterator();
+                while(iterator.hasNext()) {
+                    if(iterator.next().getQuantity() == 0) {
+                        iterator.remove();
+                    }
+                }
             }
         }
-        Iterator<Order> iterator = buyOrders.iterator();
-        while(iterator.hasNext()) {
-            if(iterator.next().getQuantity() == 0) {
-                iterator.remove();
+        if(sellOrder.getQuantity() == initialQuantity) {
+            return null;
+        } else {
+            if(sellOrder.getQuantity() > 0 && sellOrder.getQuantity() < initialQuantity) {
+                sellOrders.add(sellOrder);
+                sellOrders.sort(Order.SellOrderComparator);
             }
+            return transaction;
         }
-        if(sellOrder.getQuantity() > 0 && sellOrder.getQuantity() < initialQuantity) {
-            sellOrders.add(sellOrder);
-            sellOrders.sort(Order.SellOrderComparator);
-            return true;
-        }
-        if(sellOrder.getQuantity() == 0) {
-            return true;
-        }
-        if(sellOrder.getQuantity() == initialQuantity){
-            return false;
-        }
-        return false;
     }
 
 

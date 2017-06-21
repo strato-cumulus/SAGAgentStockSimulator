@@ -61,7 +61,7 @@ public class BankAgent extends Agent {
         });
 
         // Check funds
-        addBehaviour(new Behaviour() {
+        addBehaviour(new CyclicBehaviour() {
             @Override
             public void action() {
                 ACLMessage message = receive(checkFundsTemplate);
@@ -70,18 +70,13 @@ public class BankAgent extends Agent {
                     CheckFundsRequest query = gson.fromJson(message.getContent(), CheckFundsRequest.class);
                     Account account = accounts.get(query.accountName);
                     CheckFundsRequest reply = new CheckFundsRequest(query.accountName, account.getFunds(), account.getClear());
-                    send(AgentUtil.createMessage(getAID(), reply, ACLMessage.INFORM, Ontology.CHECK_FUNDS, BrokerAgent.aid));
+                    send(AgentUtil.createMessage(getAID(), reply, ACLMessage.INFORM, Ontology.FUNDS_RESPONSE, message.getSender()));
                 }
-            }
-
-            @Override
-            public boolean done() {
-                return false;
             }
         });
 
         // Block or unblock funds
-        addBehaviour(new Behaviour() {
+        addBehaviour(new CyclicBehaviour() {
 
             @Override
             public void action() {
@@ -101,15 +96,10 @@ public class BankAgent extends Agent {
                     send(AgentUtil.createMessage(getAID(), reply, ACLMessage.INFORM, Ontology.BLOCK_FUNDS, BrokerAgent.aid));
                 }
             }
-
-            @Override
-            public boolean done() {
-                return false;
-            }
         });
 
         // Money transfer
-        addBehaviour(new Behaviour() {
+        addBehaviour(new CyclicBehaviour() {
             @Override
             public void action() {
                 ACLMessage message = receive(transferTemplate);
@@ -118,16 +108,14 @@ public class BankAgent extends Agent {
                     MoneyTransferRequest request = gson.fromJson(message.getContent(), MoneyTransferRequest.class);
                     Account accountFrom = accounts.get(request.playerFrom);
                     Account accountTo = accounts.get(request.playerTo);
-                    accountFrom.unblockFunds(request.blockedAmount);
-                    accountFrom.blockFunds(request.amount);
-                    accountFrom.subtract(request.amount);
-                    accountTo.add(request.amount);
-                }
-            }
+                    if(accountFrom != null && accountTo != null) {
+                        accountFrom.unblockFunds(request.blockedAmount);
+                        accountFrom.blockFunds(request.amount);
+                        accountFrom.subtract(request.amount);
+                        accountTo.add(request.amount);
+                    }
 
-            @Override
-            public boolean done() {
-                return false;
+                }
             }
         });
 
