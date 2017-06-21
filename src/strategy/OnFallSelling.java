@@ -22,42 +22,24 @@ public class OnFallSelling extends Strategy {
         SortedMap<String, List<Integer>> map = new TreeMap<>((s1, s2) ->
                 comparator.reverseCompare(request.historicalEquilibriumPrice.get(s1), request.historicalEquilibriumPrice.get(s2)));
         map.putAll(request.historicalEquilibriumPrice);
-        System.out.println("rozmiar PO: " + map.size());
 
         Map<String, List<Integer>> targetMap = new HashMap<>();
+        targetMap.putAll(request.historicalEquilibriumPrice);
 
-        if(map.get(map.firstKey()).size() > 0) {
-            System.out.println("rozmiar mapy: " + map.size());
-            int bestDifference = map.get(map.firstKey()).get(0) - map.get(map.firstKey()).get(map.get(map.firstKey()).size() - 1);
+        List<String> keyList = new ArrayList<>(targetMap.keySet());
+        int randomIndex = new Random().nextInt(keyList.size());
+        String stock = keyList.get(randomIndex);
 
-            for (Map.Entry<String, List<Integer>> entry : map.entrySet()) {
-                if(entry.getValue().size() > 0) {
-                    if(entry.getValue().get(0) - entry.getValue().get(entry.getValue().size() - 1) == bestDifference) {
-                        targetMap.put(entry.getKey(), entry.getValue());
-                    }
-                }
+        if(stocks.get(stock) != null) {
+            double percentOfQuantity = ThreadLocalRandom.current().nextDouble(0.4, maxQuantitySell);
+            int quantity = (int) percentOfQuantity * stocks.get(stock);
+            int price = request.equilibriumPrice.get(stock);
+            int randomPrice = ThreadLocalRandom.current().nextInt(price - 100, price + 100);
+            if(quantity <= 0) {
+                return null;
             }
-
-            List<String> keyList = new ArrayList<>(targetMap.keySet());
-            int randomIndex = new Random().nextInt(keyList.size());
-            String stock = keyList.get(randomIndex);
-            System.out.println("WYLOSOWANO: " + stock + " RÓŻNICA: " + bestDifference + " KEY SIZE: " + keyList.size());
-
-            if(stocks.get(stock) != null) {
-                double percentOfQuantity = ThreadLocalRandom.current().nextDouble(0.4, maxQuantitySell);
-                int quantity = (int) percentOfQuantity * stocks.get(stock);
-                int price = request.equilibriumPrice.get(stock);
-                int randomPrice = ThreadLocalRandom.current().nextInt(price - 100, price + 100);
-                if(quantity <= 0) {
-                    return null;
-                }
-                return new Order(OrderType.SELL, stock, quantity, randomPrice, player);
-            }
-            return null;
+            return new Order(OrderType.SELL, stock, quantity, randomPrice, player);
         }
-        else {
-            return null;
-        }
-
+        return null;
     }
 }
